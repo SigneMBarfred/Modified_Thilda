@@ -33,10 +33,10 @@
 % mpr(4) = MRRA2;
 % 
 % return
-% 
-% above is original AtmCO2
+% % 
+% % above is original AtmCO2
 
-%below is the edited july 2026 :
+%below is the edited dyn circ ssp july 2026 :
 function [mpr] = AtmCO2_R(t,MH)
 
 % Anthropogenic CO2 emissions are now prescribed directly by SSP forcing

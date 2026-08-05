@@ -25,16 +25,16 @@ pN2O=AT(3,1)*10^9;
 % Activate global parameters
 global olf aH aLL fdiv fland sy pCO2int pCH4int pN2Oint Tseaice Tsnow 
 
-%    if t>=750*sy
+%    if t>=335*sy
 %         daint(k)=0;
 %    end
-% if t<750*sy
+% if t<335*sy
 %        mpra=0;
 % end
-%above: original
+% %above: original
 
-%below: july 2026 edit:
-if t < 750*sy
+%below: july 2026 edit for ssps:
+if k <= length(daint)
     forcing = daint(k);
 else
     forcing = 0;
@@ -77,7 +77,11 @@ pCH4int = pCH4int*10^-9;
 pN2Oint = pN2Oint*10^-9;
 
 % Zero degree background radiation for variable pCO2, pCH4, pN2O, aerosols and minor greenhouse gases 
-Atot  =  Ao -ACO2 - ACH4 - AN2O - forcing - mpra;        %  [W/m2]
+Atot  =  Ao -ACO2 - ACH4 - AN2O - forcing - mpra;        %  [W/m2]for ssp
+%runs
+
+%Atot  =  Ao -ACO2 - ACH4 - AN2O - daint(k) - mpra; %for SRES runs
+
 
 % Sensitivity of LW radiation to temperature
 

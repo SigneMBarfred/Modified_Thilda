@@ -152,9 +152,13 @@ grid on
 
 %%
 
-%% inspecting where carbon is stored: 
+%% PLOT: inspecting where carbon is stored: 
 %carbon redistribution relative to q0
 % Preallocate
+qmult = [0.25 0.50 0.75 1.00 1.25 1.50];
+nq = length(qmult);
+nt = length(st);
+year = st + 1765;
 OceanC_all    = zeros(nq,nt);
 CumBurial_all = zeros(nq,nt);
 TempLL_all    = zeros(nq,nt);
@@ -183,11 +187,10 @@ for iq = 1:nq
 
 end
 
-iref = find(qmult == 1);
+iref = find(qmult == 1); %ref is when unscaled
 
 DeltaOcean  = OceanC_all - OceanC_all(iref,:);
 DeltaBurial = CumBurial_all - CumBurial_all(iref,:);
-
 DeltaTempLL = TempLL_all - TempLL_all(iref,:);
 DeltaTempHL = TempHL_all - TempHL_all(iref,:);
 
@@ -245,6 +248,232 @@ for iq = 1:nq
 
 end
 
-sgtitle('Ocean carbon, sediment burial and SST anomalies relative to q_0')
+sgtitle('Zero forcing: Ocean carbon, sediment burial and SST anomalies relative to q_0')
+
+%% CODE NEEDS PROOFREADING: Outputting data for report tables: 
+%%DATA FOR TABLE 1
+
+qmult = [0.25 0.50 0.75 1.00 1.25 1.50];
+nq = length(qmult);
+
+% Desired times after initialization
+target_t = [335 1000 5000 10000];
+
+% Preallocate
+OCU_table = zeros(nq,length(target_t));
+DeltaOCU_10k = zeros(nq,1);
+CumBurial_10k = zeros(nq,1);
+
+for iq = 1:nq
+
+    filename = sprintf( ...
+        'OutThilda_Zero_incr_circ_10000yr_q%.2f.mat',qmult(iq));
+
+    S = load(filename,'st');
+
+    % Ocean carbon uptake relative to 1765
+    OCU = GetOceanCarbonUptake(filename);
+
+    % Find nearest saved timestep to requested times
+    for it = 1:length(target_t)
+        [~,idx] = min(abs(S.st-target_t(it)));
+        OCU_table(iq,it) = OCU(idx);
+    end
+
+    % Sediment burial
+    [~,~,TotalBurial] = GetSedimentCarbonBurial(filename); %tildes bc we ignore
+    %corg and carb and only keep total
+
+    %Make positive = burial
+    TotalBurial = -TotalBurial;
+
+    %Cumulative burial in GtC
+    CumBurial = cumtrapz(S.st,TotalBurial);
+    CumBurial_10k(iq) = CumBurial(end);
+
+end
+
+% q0 reference
+iref = find(qmult == 1);
+
+DeltaOCU_10k = OCU_table(:,end) - OCU_table(iref,end);
+
+DeltaBurial_10k = ...
+    CumBurial_10k - CumBurial_10k(iref);
+
+% Display
+Table1 = table(qmult', ...
+    OCU_table(:,1), ...
+    OCU_table(:,2), ...
+    OCU_table(:,3), ...
+    OCU_table(:,4), ...
+    DeltaOCU_10k, ...
+    DeltaBurial_10k, ...
+    'VariableNames', ...
+    {'q_q0','OCU_335yr','OCU_1kyr','OCU_5kyr','OCU_10kyr', ...
+     'DeltaOCU_10k','DeltaBurial_10k'});
+
+disp(Table1)
+
+%% plot for linearity indication: 
+q = [0.25 0.50 0.75 1.00 1.25 1.50];
+
+OCU_335 = [-60 -45 -30 -16 -2 11];
+OCU_1k  = [-45 -35 -28 -22 -18 -16];
+OCU_5k  = [128 88 43 -8 -66 -126];
+OCU_10k = [257 186 108 22 -75 -173];
+
+% Put data together
+OCU = [OCU_335;
+       OCU_1k;
+       OCU_5k;
+       OCU_10k];
+
+labels = {'335 yr','1 kyr','5 kyr','10 kyr'};
+
+figure
+hold on
+
+for i = 1:4
+
+    % Linear fit
+    p = polyfit(q,OCU(i,:),1);
+    yfit = polyval(p,q);
+
+    % R^2
+    SSres = sum((OCU(i,:) - yfit).^2);
+    SStot = sum((OCU(i,:) - mean(OCU(i,:))).^2);
+
+    R2 = 1 - SSres/SStot;
+
+    % Plot data
+    c = plot(q,OCU(i,:),'o', ...
+    'MarkerSize',7, ...
+    'LineWidth',1.5, ...
+    'DisplayName',sprintf('%s, R^2 = %.3f',labels{i},R2));
+
+plot(q,yfit,'--', ...
+    'LineWidth',1.5, ...
+    'Color',c.Color,...
+    'HandleVisibility','off');
+
+end
+
+xlabel('q/q_0')
+ylabel('Ocean carbon uptake (GtC)')
+legend('Location','best')
+title('Ocean Carbon Uptake as a function of circulation strength')
+grid on
 
 
+%% data for table 2
+%% Data for carbon distribution table
+
+qmult = [0.25 0.50 0.75 1.00 1.25 1.50];
+nq = length(qmult);
+
+ParVal_R
+global dm d n
+
+% Model layer depths
+depth = [dm dm+d*(1:n-1)];
+
+% Define depth ranges
+idx_surface = depth <= 200;
+idx_intermediate = depth > 200 & depth <= 2000;
+idx_deep = depth > 2000;
+
+% Preallocate final carbon inventories
+C_LL = zeros(nq,n);
+C_HL = zeros(nq,n);
+pCO2 = zeros(nq,1);
+
+
+%% Load each simulation
+
+for iq = 1:nq
+
+    filename = sprintf( ...
+        'OutThilda_Zero_incr_circ_10000yr_q%.2f.mat',qmult(iq));
+
+    % Carbon change by layer relative to 1765
+    [CarbonLL,CarbonHL] = GetOceanCarbonByLayer(filename);
+
+    % Take final timestep (10 kyr)
+    C_LL(iq,:) = CarbonLL(:,end)';
+    C_HL(iq,:) = CarbonHL(:,end)';
+
+    % Atmospheric CO2 at 10 kyr
+    S = load(filename,'sAT');
+    pCO2(iq) = S.sAT(4,1,end)*1e6;  % atm -> ppm
+
+end
+
+
+%% Convert to anomalies relative to q0
+
+iref = find(qmult == 1);
+
+DeltaLL = C_LL - C_LL(iref,:);
+DeltaHL = C_HL - C_HL(iref,:);
+
+Delta_pCO2 = pCO2 - pCO2(iref);
+
+
+%% Vertical distribution
+
+% GtC anomaly in each depth interval
+C_surface = ...
+    sum(DeltaLL(:,idx_surface),2) + ...
+    sum(DeltaHL(:,idx_surface),2);
+
+C_intermediate = ...
+    sum(DeltaLL(:,idx_intermediate),2) + ...
+    sum(DeltaHL(:,idx_intermediate),2);
+
+C_deep = ...
+    sum(DeltaLL(:,idx_deep),2) + ...
+    sum(DeltaHL(:,idx_deep),2);
+
+% Total ocean carbon anomaly
+C_total = C_surface + C_intermediate + C_deep;
+
+% Convert to percentages
+f_surface = 100*C_surface./C_total;
+f_intermediate = 100*C_intermediate./C_total;
+f_deep = 100*C_deep./C_total;
+
+
+%% Latitudinal distribution
+
+C_LL_total = sum(DeltaLL,2);
+C_HL_total = sum(DeltaHL,2);
+
+f_LL = 100*C_LL_total./C_total;
+f_HL = 100*C_HL_total./C_total;
+
+
+%% q/q0 = 1 has no anomaly relative to itself
+
+f_surface(iref) = NaN;
+f_intermediate(iref) = NaN;
+f_deep(iref) = NaN;
+f_LL(iref) = NaN;
+f_HL(iref) = NaN;
+
+
+%% Create table
+
+T = table( ...
+    qmult', ...
+    f_surface, ...
+    f_intermediate, ...
+    f_deep, ...
+    f_LL, ...
+    f_HL, ...
+    Delta_pCO2, ...
+    'VariableNames', ...
+    {'q_q0','Surface_pct','Intermediate_pct','Deep_pct', ...
+     'LL_pct','HL_pct','Delta_pCO2_ppm'});
+
+disp(T)

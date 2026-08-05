@@ -1,0 +1,41 @@
+load('OutThilda_A25C_incr_circ_10000yr_q.mat')
+
+
+max(abs(squeeze(sAT(4,1,:)) - squeeze(sAT(4,2,:))))
+%%
+whos
+
+
+
+min(dworgCLL(:))
+max(dworgCLL(:))
+
+min(dwcLL(:))
+max(dwcLL(:))
+
+min(pOrgCLL(:))
+max(pOrgCLL(:))
+
+
+figure
+
+plot(dworgCLL(:,1),'LineWidth',1)
+hold on
+plot(dworgCLL(:,500),'LineWidth',1)
+plot(dworgCLL(:,1000),'LineWidth',1)
+
+legend('1765','mid','end')
+xlabel('Depth layer')
+ylabel('dworgCLL')
+
+
+
+%%
+figure
+imagesc(time,1:55,dworgCLL)
+set(gca,'YDir','reverse')
+colorbar
+
+xlabel('Year')
+ylabel('Ocean layer')
+title('Organic matter fraction in low-latitude sediments')

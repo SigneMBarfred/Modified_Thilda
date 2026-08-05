@@ -15,19 +15,23 @@ M     = (pCH4-pCH4o)/pCH4o;
 RCH4o   =  1/(rVa*mdts*sy);          %PI decay rate for methane, residence time 8.4 yrs
 RCH4    =  RCH4o*(1-0.96*M/(M+6.6)); %non-linear decay law for CH4, approximate fit
                                      %to Schmidt & Shindell (2003), Paleoceanography       
-% original: 
-% if (t/sy>=MH(1))
-%     MRR  =  (mgt*MH(2)*(t/sy-MH(1))^4*exp(-MH(3)*(t/sy-MH(1))))/sy; 
-% 
-% else
-%     MRR =0;
-% end
-%mpr(1) = MRR;
+%original: 
+if (t/sy>=MH(1))
+    MRR  =  (mgt*MH(2)*(t/sy-MH(1))^4*exp(-MH(3)*(t/sy-MH(1))))/sy; 
+
+else
+    MRR =0;
+end
+%--original
+% mpr(1) = MRR;
+% mdr(1) =  pCH4*RCH4;
+%---
 
 %edit july 2026: No artificial methane release after the prescribed SSP forcing
 mpr(1) = 0;
+mdr(1) =  pCH4*RCH4;
+  
 
-mdr(1) =  pCH4*RCH4;                       
 
 return
 

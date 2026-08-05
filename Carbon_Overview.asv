@@ -1,0 +1,35 @@
+% carbon overview
+%are the changes in carbon in the system correpsonding to the changing
+%emissions or is the model doing stuff it should not
+
+filename = 'OutThilda_A25C_incr_circ_10000yr_q0.50.mat';
+
+load(filename)
+time = st + 1765;
+ParVal_R
+
+%how much carbon is in oceans through time for this simulation
+OceanC = GetOceanCarbonInventory(filename);
+
+%atmospheric C
+global rVa mgt %inverse atmospheric volume for one hemisphere (rVa) and conversion btw moles anf gigatonees of carbon (mgt)
+
+Catm = 2*squeeze(sAT(4,1,:))/rVa/mgt;
+%factor 2 bc both hemispheres (equal mixing is assummed and seems to bee
+%the case)
+%convert from partial pressure to gigatonnes 
+
+%land carbon (there are 4 reservoirs in this, that we will simply add
+%together)
+LandC = squeeze(sum(sLB,1));
+
+
+%adding it all up, we expect this then somewhat matches the development of
+%anthropogenic emissions
+
+TotalC = OceanC + Catm + LandC;
+
+%plotting time
+figure
+plot()
+

@@ -1,5 +1,5 @@
 function Thilda_R
-
+%clear global
 % Reduced complexity DCESS model (no isotope calculations)
 % March 2010 Gary Shaffer
 % Integrates the ordinary differential equations in ODE_R.m using 
@@ -8,8 +8,7 @@ function Thilda_R
 
 %  Get globalparameter values
 ParVal_R;
-global sy aLL aHL dm d n LfLL LfHL NCFLL NCFHL CAFLL CAFHL fdiv qmax
-fprintf('qmax = %.4e\n',qmax)
+global sy aLL aHL dm d n LfLL LfHL NCFLL NCFHL CAFLL CAFHL fdiv 
 % 2026 change: qmax as global with value: 
 %qmax = aLL*1.8e-8;
 
@@ -22,15 +21,31 @@ GAw=GAw./GAw(1);
 GAc=GAc./GAc(1);
 
 %Load inital values for pre-industrial (PI) steady state
-load ResThildaPI_R   
+load ResThildaPI_R 
 
-%below: 2 variables added july 2026 in order to make circulation a function of temp
-%and salinity
-global T0 S0
-T0 = HL(1,1);
-S0 = HL(2,1);
-%
+% %below: 2 variables added july 2026 pertaining to 1st attemt at evolving
+% % circ in order to make circulation a function of temp
+% %and salinity
+% global T0 S0
+% %disp(T0) % sanity check: is around 0.107 deg celsius
+% T0 = HL(1,1);
+% S0 = HL(2,1);
+% %
 
+% ----below:addition pertaining to 2nd attempt at evolving circ:
+global qmax
+
+%equation of state coefficients
+alpha = 2e-4;    % Thermal expansion coefficient (1/deg C)
+beta  = 8e-4;    % Haline contraction coefficient (1/psu)
+THL0  = HL(1,1);
+SHL0  = HL(2,1);
+
+TLL0  = LL(1,1);
+SLL0  = LL(2,1);
+%ref density at PI:
+drho0 = -alpha*(THL0-TLL0) + beta*(SHL0-SLL0);
+% --- end of addition
 
 % Control parameters for the time integration 
 %--------------------------------------------
@@ -63,12 +78,16 @@ ko     = 1;        % Timestep [yr] at which CO3 and time dependent sediment mode
 %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceB1_5C(h);   %B1forcing, 4.8 CS
 
 %For june 2026: Zero Forcing 
-[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=zero_Force(h);
+%[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=zero_Force(h);
 
 %for july 2026, updated pathways: 
 %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=Force_SSP1(h);
 %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=Force_SSP2(h);
 %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=Force_SSP3(h);
+
+%for august 2026, hysteresis test
+[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=Force_SSP1_hyst(h);
+%[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=Force_SSP3_hyst(h);
 
 %--------------------------------------------------------------------------
 
@@ -146,6 +165,7 @@ for c =1:tend/dtout
     LB = LB+1/6*dt*( k1LB+2*k2LB+2*k3LB+k4LB );
     GS = GS+1/6*dt*( k1GS+2*k2GS+2*k3GS+k4GS );
 
+
     k=k+1;
     
   end % counter cc
@@ -194,3 +214,227 @@ save OutThilda_R st sqmax sLL sHL sAT sLB sGS srLL srHL dwcLL dwcHL dworgCLL dwo
 
 
 return
+
+
+
+
+
+%%%%%%%%%%%%%%%% adjusted to carry drho, so for use when performing
+%%%%%%%%%%%%%%%% dynamical circulation experiments: 
+% function Thilda_R
+% clear global
+% % Reduced complexity DCESS model (no isotope calculations)
+% % March 2010 Gary Shaffer
+% % Integrates the ordinary differential equations in ODE_R.m using 
+% % a fourth order Runge Kutta scheme with fixed timestep (h).
+% 
+% 
+% %  Get globalparameter values
+% ParVal_R;
+% global sy aLL aHL dm d n LfLL LfHL NCFLL NCFHL CAFLL CAFHL fdiv 
+% % 2026 change: qmax as global with value: 
+% %qmax = aLL*1.8e-8;
+% 
+% %  Get ocean topography distribution
+% 
+% load Globalarea.txt
+% GAw=interp1(Globalarea(1:23,1),Globalarea(1:23,14),[dm dm+d*(1:n-1)]);
+% GAc=interp1(Globalarea(24:46,1),Globalarea(24:46,14),[dm dm+d*(1:n-1)]);
+% GAw=GAw./GAw(1);                        
+% GAc=GAc./GAc(1);
+% 
+% %Load inital values for pre-industrial (PI) steady state
+% load ResThildaPI_R 
+% 
+% % %below: 2 variables added july 2026 pertaining to 1st attemt at evolving
+% % % circ in order to make circulation a function of temp
+% % %and salinity
+% % global T0 S0
+% % %disp(T0) % sanity check: is around 0.107 deg celsius
+% % T0 = HL(1,1);
+% % S0 = HL(2,1);
+% % %
+% 
+% % ----below:addition pertaining to 2nd attempt at evolving circ:
+% global drho0 qmax
+% 
+% %equation of state coefficients
+% alpha = 2e-4;    % Thermal expansion coefficient (1/deg C)
+% beta  = 8e-4;    % Haline contraction coefficient (1/psu)
+% THL0  = HL(1,1);
+% SHL0  = HL(2,1);
+% 
+% TLL0  = LL(1,1);
+% SLL0  = LL(2,1);
+% %ref density at PI:
+% drho0 = -alpha*(THL0-TLL0) + beta*(SHL0-SLL0);
+% % --- end of addition
+% 
+% % Control parameters for the time integration 
+% %--------------------------------------------
+% tend   = 10000;     % End-time of integration [yr]. The value chosen here gives the output (OutThilda_R) supplied
+% dtout  = 10;       % Output interval [yr], st val 10 for use of supplied plotting programs
+% h      = 1/25;     % Timestep [yr], st val 1/25 for numerical stability
+% ko     = 1;        % Timestep [yr] at which CO3 and time dependent sediment model are calculated
+% 
+% %--------------------------------------------------------------------------
+% 
+% %Forcing for different scenarios and climate sensitivities (CS).
+% %One of these should be chosen (uncommented)for each run. The one chosen
+% %here gives the output (OutThilda_R) supplied
+% 
+% %Forcings used in Shaffer (2010), Nature Geoscience:
+% 
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceA2_3C(h);   %A2forcing,3 CS
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceOS_3C(h);   %OS forcing,3 CS 
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceGS1_3C(h);  %GS1 forcing,3 CS
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceGS2_3C(h);  %GS2 forcing,3 CS
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceGS3_3C(h);  %GS3 forcing,3 CS
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceGS1O_3C(h); %GS1O forcing,3 CS
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceAG_3C(h);   %AG forcing,3 CS 
+% 
+% %Forcings used in Shaffer, Olsen and Pedersen (2009), Nature Geoscience: 
+% 
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceA2_3C(h);   %A2forcing,3 CS
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceA2_5C(h);   %A2forcing, 4.8 CS
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceB1_3C(h);   %B1forcing, 3 CS
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceB1_5C(h);   %B1forcing, 4.8 CS
+% 
+% %For june 2026: Zero Forcing 
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=zero_Force(h);
+% 
+% %for july 2026, updated pathways: 
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=Force_SSP1(h);
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=Force_SSP2(h);
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=Force_SSP3(h);
+% 
+% %for august 2026, hysteresis test
+% [daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=Force_SSP1_hyst(h);
+% %[daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=Force_SSP3_hyst(h);
+% 
+% %--------------------------------------------------------------------------
+% 
+% % Integration
+% %------------------------------
+% dt    = h*sy;  % Timestep [sec]
+% t     = 0;
+% k=1;
+% 
+% for c =1:tend/dtout
+%    for cc=0:dt:(dtout*sy-dt)
+%       if mod(t/sy,ko)==0
+% 
+%       %---------------
+%       % Sediment model
+%       %---------------
+% 
+%       %Calculate values for sediment model iteration
+% 
+%       % Iterate the carbonate system for the vertical profile of 
+%       % the CO3 concentration and saturation state 
+%       [LLCO3,LLCO3s,HpLL]=CarSysPres_R(LL);
+%       [HLCO3,HLCO3s,HpHL]=CarSysPres_R(HL);
+% 
+%       %Calculate energy balance to get ice-free ocean area     
+%       [mpra] = AtmAero_R(t,MHA);
+%       [QEBLL,QEBHL,QLL,QHL,aHLNI,Fw] = AtmEnerBal_R(t,LL(1,1),HL(1,1),LWR,AT,daint,mpra,k);
+%       [RcarLL,RcarHL,RorgLL,RorgHL,Wcarb,Wsil,Worg]=ExtForce_R(AT);
+%       % Get surface CO2
+%       [asLL,CO2LL] = GasExc_R(LL,AT,aLL);
+%       [asHL,CO2HL] = GasExc_R(HL,AT,aHLNI);
+%       % Get New Produktion
+%       [srcLL] = OrgFlx_R(LL,AT,aLL,LfLL,CO2LL,GAw,pCalLL,pOrgLL,RcarLL,RorgLL);
+%       [srcHL] = OrgFlx_R(HL,AT,aHLNI,LfHL,CO2HL,GAc,pCalHL,pOrgHL,RcarHL,RorgHL);
+%       NPL = (srcLL(3,1)-RorgLL)/aLL;
+%       NPHM = (srcHL(3,1)-RorgHL)/aHL;
+% 
+%       %Time dependent sediment model
+% 
+%      [pCalLL,pOrgLL,dwpCalLL,dwpOrgLL,fimLL,wsedLL]=...
+%          SMtdCorg_R(LL,NCFLL,CAFLL,LLCO3,LLCO3s,NPL,dwpCalLL,dwpCalssLL,dwpOrgLL,dwpOrgssLL,fimLL,wsedLL,ko);
+%      [pCalHL,pOrgHL,dwpCalHL,dwpOrgHL,fimHL,wsedHL]=...
+%          SMtdCorg_R(HL,NCFHL,CAFHL,HLCO3,HLCO3s,NPHM,dwpCalHL,dwpCalssHL,dwpOrgHL,dwpOrgssHL,fimHL,wsedHL,ko);
+% 
+%     end  
+% 
+%     t=t+dt;
+%     [k1LL,k1HL,k1AT,k1LB,k1GS,srLL1,srHL1,drho1] = ...
+%         ODE_R(t,LL,HL,MHC,MHA,MHM,LWR,AT,LB,GS,GAw,GAc,pCalLL,pCalHL,pOrgLL,pOrgHL,daint,co2emfos,co2emland,ch4em,co2seq1,co2seq2,k); 
+%       nLL = LL+k1LL*dt/2; 
+%       nHL = HL+k1HL*dt/2;
+%       nAT = AT+k1AT*dt/2;
+%       nLB = LB+k1LB*dt/2;
+%       nGS = GS+k1GS*dt/2;
+%     [k2LL,k2HL,k2AT,k2LB,k2GS,srLL2,srHL2,drho2] =...
+%         ODE_R(t+dt/2,nLL,nHL,MHC,MHA,MHM,LWR,nAT,nLB,nGS,GAw,GAc,pCalLL,pCalHL,pOrgLL,pOrgHL,daint,co2emfos,co2emland,ch4em,co2seq1,co2seq2,k);
+%       nLL = LL+k2LL*dt/2; 
+%       nHL = HL+k2HL*dt/2; 
+%       nAT = AT+k2AT*dt/2;
+%       nLB = LB+k2LB*dt/2;
+%       nGS = GS+k2GS*dt/2;
+%     [k3LL,k3HL,k3AT,k3LB,k3GS,srLL3,srHL3,drho3] =...
+%         ODE_R(t+dt/2,nLL,nHL,MHC,MHA,MHM,LWR,nAT,nLB,nGS,GAw,GAc,pCalLL,pCalHL,pOrgLL,pOrgHL,daint,co2emfos,co2emland,ch4em,co2seq1,co2seq2,k);
+%       nLL = LL+k3LL*dt; 
+%       nHL = HL+k3HL*dt; 
+%       nAT = AT+k3AT*dt; 
+%       nLB = LB+k3LB*dt; 
+%       nGS = GS+k3GS*dt/2;
+%     [k4LL,k4HL,k4AT,k4LB,k4GS,srLL4,srHL4,drho4] =...
+%         ODE_R(t+dt,nLL,nHL,MHC,MHA,MHM,LWR,nAT,nLB,nGS,GAw,GAc,pCalLL,pCalHL,pOrgLL,pOrgHL,daint,co2emfos,co2emland,ch4em,co2seq1,co2seq2,k);
+% 
+%     LL = LL+1/6*dt*( k1LL+2*k2LL+2*k3LL+k4LL );
+%     HL = HL+1/6*dt*( k1HL+2*k2HL+2*k3HL+k4HL );
+%     AT = AT+1/6*dt*( k1AT+2*k2AT+2*k3AT+k4AT );
+%     LB = LB+1/6*dt*( k1LB+2*k2LB+2*k3LB+k4LB );
+%     GS = GS+1/6*dt*( k1GS+2*k2GS+2*k3GS+k4GS );
+%     drho = 1/6*(drho1 + 2*drho2 + 2*drho3 + drho4);
+% 
+%     k=k+1;
+% 
+%   end % counter cc
+% 
+%   sLL( :,:,c) = LL;
+%   sHL( :,:,c) = HL;
+%   sAT( :,:,c) = AT;
+%   sLB( :,:,c) = LB; 
+%   sGS(:,c) = GS; 
+%   srLL(:,:,c) = 1/6*(srLL1+2*srLL2+2*srLL3+srLL4);
+%   srHL(:,:,c) = 1/6*(srHL1+2*srHL2+2*srHL3+srHL4);
+%   st(  c    ) = t/sy;
+%   sqmax(c) = qmax; %added july 2026
+%   sdrho(c)=drho; %added august 2026 for 2nd attempt evolv. circ.
+%   dwcLL(:,c)=dwpCalLL;
+%   dwcHL(:,c)=dwpCalHL;
+%   dworgCLL(:,c)=dwpOrgLL;
+%   dworgCHL(:,c)=dwpOrgHL;
+%   fiLL(:,c)=fimLL;
+%   fiHL(:,c)=fimHL;
+%   pCalCLL(:,c)=pCalLL;
+%   pCalCHL(:,c)=pCalHL;
+%   pOrgCLL(:,c)=pOrgLL;
+%   pOrgCHL(:,c)=pOrgHL;
+%   wsLL(:,c)=wsedLL;
+%   wsHL(:,c)=wsedHL;
+% 
+%   RoLL(1,1,c)=RorgLL;
+%   RcLL(1,1,c)=RcarLL;
+%   RoHL(1,1,c)=RorgHL;
+%   RcHL(1,1,c)=RcarHL;
+% 
+%  disp(strcat(['Integration at year ' num2str(c*dtout) ...
+% 		   ' (tend = ',num2str(tend) ')']))
+%   end % counter c
+% %------------------------------
+% 
+% % Save output file
+% %------------------------------
+% 
+% save OutThilda_R st sqmax sdrho sLL sHL sAT sLB sGS srLL srHL dwcLL dwcHL dworgCLL dworgCHL...
+%     fiLL fiHL pCalCLL pCalCHL pOrgCLL pOrgCHL wsLL wsHL RoLL RoHL RcLL RcHL
+% 
+% 
+%  AT(4,1)*1e6                                 %pCO2
+%  AT(1,1)*sin(fdiv)+AT(1,2)*(1-sin(fdiv))     %Global mean temperature 
+% 
+% 
+% return

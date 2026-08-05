@@ -1,0 +1,168 @@
+
+files = {'OutThilda_q0.25.mat',...
+         'OutThilda_q0.50.mat',...
+         'OutThilda_q0.75.mat',...
+         'OutThilda_q1.00.mat'};
+
+figure
+hold on
+
+for i = 1:length(files)
+
+    load(files{i},'st','sAT')
+
+    plot(st+1765,squeeze(sAT(4,1,:))*1e6)
+
+end
+
+legend('0.25x','0.5x','0.75x','1x')
+ylabel('pCO_2 (\mu atm)')
+xlabel('Year')
+
+
+figure
+hold on
+
+for i = 1:length(files)
+
+    load(files{i},'st','sLL','sHL','aLL','aHL','GAw','GAc','dm')
+
+    OceanC = zeros(length(st),1);
+
+    for ii = 1:length(st)
+
+        DICLL = squeeze(sLL(4,:,ii));
+        DICHL = squeeze(sHL(4,:,ii));
+
+        OceanC(ii) = 2*12.011 * ...
+            ( aLL*sum(DICLL.*GAw)*dm + ...
+              aHL*sum(DICHL.*GAc)*dm ) ...
+              /1e15;
+    end
+
+    plot(st+1765,OceanC,'LineWidth',1.5)
+
+end
+
+legend('0.25x','0.5x','0.75x','1x')
+ylabel('Ocean DIC (GtC)')
+xlabel('Year')
+
+
+
+figure
+hold on
+
+for i = 1:length(files)
+
+    load(files{i},'st','sLL')
+
+    plot(st+1765,squeeze(sLL(4,1,:)),'LineWidth',1.5)
+
+end
+
+legend('0.25x','0.5x','0.75x','1x')
+ylabel('Surface DIC (mol m^{-3})')
+xlabel('Year')
+
+
+figure
+hold on
+
+for i = 1:length(files)
+
+    load(files{i},'st','sLL')
+
+    plot(st+1765,squeeze(sLL(4,30,:)),'LineWidth',1.5)
+
+end
+
+legend('0.25x','0.5x','0.75x','1x')
+ylabel('DIC at 3000 m (mol m^{-3})')
+xlabel('Year')
+
+
+
+
+% for 10000 year prediction
+files = {'OutThilda_q0.25.mat',...
+         'OutThilda_q0.50.mat',...
+         'OutThilda_q0.75.mat',...
+         'OutThilda_q1.00.mat'};
+
+figure
+hold on
+
+for i = 1:length(files)
+
+    load(files{i},'st','sAT')
+
+    plot(st+1765,squeeze(sAT(4,1,:))*1e6)
+
+end
+
+legend('0.25x','0.5x','0.75x','1x')
+ylabel('pCO_2 (\mu atm)')
+xlabel('Year')
+
+
+figure
+hold on
+
+for i = 1:length(files)
+
+    load(files{i},'st','sLL','sHL','aLL','aHL','GAw','GAc','dm')
+
+    OceanC = zeros(length(st),1);
+
+    for ii = 1:length(st)
+
+        DICLL = squeeze(sLL(4,:,ii));
+        DICHL = squeeze(sHL(4,:,ii));
+
+        OceanC(ii) = 2*12.011 * ...
+            ( aLL*sum(DICLL.*GAw)*dm + ...
+              aHL*sum(DICHL.*GAc)*dm ) ...
+              /1e15;
+    end
+
+    plot(st+1765,OceanC,'LineWidth',1.5)
+
+end
+
+legend('0.25x','0.5x','0.75x','1x')
+ylabel('Ocean DIC (GtC)')
+xlabel('Year')
+
+
+
+figure
+hold on
+
+for i = 1:length(files)
+
+    load(files{i},'st','sLL')
+
+    plot(st+1765,squeeze(sLL(4,1,:)),'LineWidth',1.5)
+
+end
+
+legend('0.25x','0.5x','0.75x','1x')
+ylabel('Surface DIC (mol m^{-3})')
+xlabel('Year')
+
+
+figure
+hold on
+
+for i = 1:length(files)
+
+    load(files{i},'st','sLL')
+
+    plot(st+1765,squeeze(sLL(4,30,:)),'LineWidth',1.5)
+
+end
+
+legend('0.25x','0.5x','0.75x','1x')
+ylabel('DIC at 3000 m (mol m^{-3})')
+xlabel('Year')

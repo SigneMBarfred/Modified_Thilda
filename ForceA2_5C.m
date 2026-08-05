@@ -1,14 +1,14 @@
 function [daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceA2_5C(h)
 
 load NonGHG_A2asf_HA.txt
-load CO2fosem_A2asf.txt
-load CO2landem_A2asf.txt
-load CH4em_A2asf.txt
+load CO2fosem_A2asf_GCB2024.txt
+load CO2landem_A2asf_GCB2024.txt
+load CH4em_A2asf_GMB2021.txt
 
 daint = interp1(NonGHG_A2asf_HA,1:h:336); 
-co2emfos=interp1(CO2fosem_A2asf,1:h:336); 
-co2emland = interp1(CO2landem_A2asf, 1:h:336);
-ch4em = interp1(CH4em_A2asf, 1:h:336); 
+co2emfos=interp1(CO2fosem_A2asf_GCB2024,1:h:336); 
+co2emland = interp1(CO2landem_A2asf_GCB2024, 1:h:336);
+ch4em = interp1(CH4em_A2asf_GMB2021, 1:h:336); 
 co2seq1 = zeros(1,336/h);  
 co2seq2 = zeros(1,336/h); 
 

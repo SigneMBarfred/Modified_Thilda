@@ -1,0 +1,395 @@
+%script for plotting the scaled circulation strengths 
+%created june 2026
+
+
+
+%%%%%% for increased circulation run: 
+
+q_labels= {'0.25','0.50','0.75','1.00', '1.25', '1.50'}
+
+
+%read in files for 500yr yr run of A23C
+A25C_025 = GetOceanCarbonUptake('OutThilda_A25C_incr_circ_10000yr_q0.25.mat');
+A25C_050 = GetOceanCarbonUptake('OutThilda_A25C_incr_circ_10000yr_q0.50.mat');
+A25C_075 = GetOceanCarbonUptake('OutThilda_A25C_incr_circ_10000yr_q0.75.mat');
+A25C_100 = GetOceanCarbonUptake('OutThilda_A25C_incr_circ_10000yr_q1.00.mat');
+A25C_125 = GetOceanCarbonUptake('OutThilda_A25C_incr_circ_10000yr_q1.25.mat');
+A25C_150 = GetOceanCarbonUptake('OutThilda_A25C_incr_circ_10000yr_q1.50.mat');
+
+
+%time vectors are all identical, we load one: 
+load('OutThilda_A25C_incr_circ_10000yr_q0.25.mat')
+time = st + 1765;
+
+%plot for this scenario
+figure
+
+%subplot(2,2,1)
+
+plot(time,A25C_025,'LineWidth',2)
+hold on
+plot(time,A25C_050,'LineWidth',2)
+plot(time,A25C_075,'LineWidth',2)
+plot(time,A25C_100,'LineWidth',2)
+plot(time,A25C_125,'LineWidth',2)
+plot(time,A25C_150,'LineWidth',2)
+title('A2 5C')
+ylabel('Ocean Carbon Uptake (GtC)')
+legend(q_labels)
+grid on
+
+%want to see how it differs from unchanged circulation
+A25C_025_anom = A25C_025 - A25C_100;
+A25C_050_anom = A25C_050 - A25C_100;
+A25C_075_anom = A25C_075 - A25C_100;
+A25C_125_anom = A25C_125 - A25C_100;
+A25C_150_anom = A25C_150 - A25C_100;
+figure
+
+plot(time,A25C_025_anom,'LineWidth',2)
+hold on
+
+plot(time,A25C_050_anom,'LineWidth',2)
+plot(time,A25C_075_anom,'LineWidth',2)
+yline(0,'k--','LineWidth',2) %ref
+plot(time,A25C_125_anom,'LineWidth',2)
+plot(time,A25C_150_anom,'LineWidth',2)
+
+
+xlabel('Year')
+ylabel('\Delta Ocean Carbon Uptake (GtC)')
+legend('q=0.25','q=0.50','q=0.75','q=1.00', 'q=1.25','q=1.50')
+
+title('Change in carbon ocean uptake relative to unchanged circulation for A25C')
+grid on
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%For zero forcing as well
+
+q_labels= {'0.25','0.50','0.75','1.00', '1.25', '1.50'}
+
+
+%read in files for 500yr yr run of A23C
+ZeroForce_025 = GetOceanCarbonUptake('OutThilda_ZeroForce_incr_circ_1000yr_q0.25.mat');
+ZeroForce_050 = GetOceanCarbonUptake('OutThilda_ZeroForce_incr_circ_1000yr_q0.50.mat');
+ZeroForce_075 = GetOceanCarbonUptake('OutThilda_ZeroForce_incr_circ_1000yr_q0.75.mat');
+ZeroForce_100 = GetOceanCarbonUptake('OutThilda_ZeroForce_incr_circ_1000yr_q1.00.mat');
+ZeroForce_125 = GetOceanCarbonUptake('OutThilda_ZeroForce_incr_circ_1000yr_q1.25.mat');
+ZeroForce_150 = GetOceanCarbonUptake('OutThilda_ZeroForce_incr_circ_1000yr_q1.50.mat');
+
+
+%time vectors are all identical, we load one: 
+load('OutThilda_ZeroForce_incr_circ_1000yr_q0.25.mat')
+time = st + 1765;
+
+%plot for this scenario
+figure
+
+%subplot(2,2,1)
+
+plot(time,ZeroForce_025,'LineWidth',2)
+hold on
+plot(time,ZeroForce_050,'LineWidth',2)
+plot(time,ZeroForce_075,'LineWidth',2)
+plot(time,ZeroForce_100,'LineWidth',2)
+plot(time,ZeroForce_125,'LineWidth',2)
+plot(time,ZeroForce_150,'LineWidth',2)
+title('Zero forcing')
+ylabel('Ocean Carbon Uptake (GtC)')
+legend(q_labels)
+grid on
+
+%want to see how it differs from unchanged circulation
+ZeroForce_025_anom = ZeroForce_025 - ZeroForce_100;
+ZeroForce_050_anom = ZeroForce_050 - ZeroForce_100;
+ZeroForce_075_anom = ZeroForce_075 - ZeroForce_100;
+ZeroForce_125_anom = ZeroForce_125 - ZeroForce_100;
+ZeroForce_150_anom = ZeroForce_150 - ZeroForce_100;
+figure
+
+plot(time,ZeroForce_025_anom,'LineWidth',2)
+hold on
+
+plot(time,ZeroForce_050_anom,'LineWidth',2)
+plot(time,ZeroForce_075_anom,'LineWidth',2)
+yline(0,'k--','LineWidth',2) %ref
+plot(time,ZeroForce_125_anom,'LineWidth',2)
+plot(time,ZeroForce_150_anom,'LineWidth',2)
+
+
+xlabel('Year')
+ylabel('\Delta Ocean Carbon Uptake (GtC)')
+legend('q=0.25','q=0.50','q=0.75','q=1.00', 'q=1.25','q=1.50')
+
+title('Zero force - Change in carbon ocean uptake relative to unchanged circulation')
+grid on
+
+%% want to see how zero force atm carbon chnges: 
+
+
+qvals = [0.25 0.50 0.75 1.00 1.25 1.50];
+
+figure
+hold on
+
+for i = 1:length(qvals)
+
+    filename = sprintf('OutThilda_ZeroForce_incr_circ_1000yr_q%.2f.mat', qvals(i));
+    load(filename)
+
+    time = st + 1765;
+
+    CO2 = squeeze(sAT(4,1,:))*1e6;   % ppm
+
+    plot(time, CO2, 'LineWidth',2)
+
+end
+
+xlabel('Year')
+ylabel('Atmospheric CO_2 (ppm)')
+title('Atmospheric CO_2 for zero forcing')
+legend('0.25','0.50','0.75','1.00','1.25','1.50','Location','best')
+grid on
+%seems there is still a pulse in the forcing file that should be removed
+
+
+% ALSO SEDIMENT PLOTS: 
+%when loading in each file, get the sediment variable and store
+%(there must be a smarter way to do this than reading in the files again?) 
+%% 
+
+load('OutThilda_A25C_incr_circ_10000yr_q0.25.mat');
+
+min(sGS(1,:))
+max(sGS(1,:))
+A25C_025_GS = 2*squeeze(sGS(1,:));
+%% 
+
+
+load('OutThilda_A25C_incr_circ_10000yr_q0.50.mat');
+A25C_050_GS = 2*squeeze(sGS(1,:));
+
+load('OutThilda_A25C_incr_circ_10000yr_q0.75.mat');
+A25C_075_GS = 2*squeeze(sGS(1,:));
+
+load('OutThilda_A25C_incr_circ_10000yr_q1.00.mat');
+A25C_100_GS = 2*squeeze(sGS(1,:));
+
+load('OutThilda_A25C_incr_circ_10000yr_q1.25.mat');
+A25C_125_GS = 2*squeeze(sGS(1,:));
+
+load('OutThilda_A25C_incr_circ_10000yr_q1.50.mat');
+A25C_150_GS = 2*squeeze(sGS(1,:));
+
+%plot the geo carbon seq. data
+figure
+
+plot(time,A25C_025_GS,'LineWidth',2)
+hold on
+plot(time,A25C_050_GS,'LineWidth',2)
+plot(time,A25C_075_GS,'LineWidth',2)
+plot(time,A25C_100_GS,'LineWidth',2)
+plot(time,A25C_125_GS,'LineWidth',2)
+plot(time,A25C_150_GS,'LineWidth',2)
+
+title('A2 5C')
+xlabel('Year')
+ylabel('Geological Carbon Sequestration (GtC)')
+legend(q_labels)
+grid on
+
+%also the anomaly as we did with ocean carbon uptake
+A25C_025_GS_anom = A25C_025_GS - A25C_100_GS;
+A25C_050_GS_anom = A25C_050_GS - A25C_100_GS;
+A25C_075_GS_anom = A25C_075_GS - A25C_100_GS;
+A25C_125_GS_anom = A25C_125_GS - A25C_100_GS;
+A25C_150_GS_anom = A25C_150_GS - A25C_100_GS;
+
+figure
+
+plot(time,A25C_025_GS_anom,'LineWidth',2)
+hold on
+plot(time,A25C_050_GS_anom,'LineWidth',2)
+plot(time,A25C_075_GS_anom,'LineWidth',2)
+yline(0,'k--','LineWidth',2)
+plot(time,A25C_125_GS_anom,'LineWidth',2)
+plot(time,A25C_150_GS_anom,'LineWidth',2)
+
+xlabel('Year')
+ylabel('\Delta Geological Carbon Sequestration (GtC)')
+legend('q=0.25','q=0.50','q=0.75','q=1.00','q=1.25','q=1.50')
+title('Change in geological carbon sequestration relative to unchanged circulation')
+grid on
+
+%% 
+
+%%%%%%%%%%%%%
+%Doing this for the 3 other pathways as well :
+q_labels= {'0.25','0.50','0.75','1.00'}
+scenarios = {'A23C', 'A25C', 'B13C', 'B15C'}
+A25C_025 = GetOceanCarbonUptake('OutThilda_A25C_500yr_q0.25.mat');
+A25C_050 = GetOceanCarbonUptake('OutThilda_A25C_500yr_q0.50.mat');
+A25C_075 = GetOceanCarbonUptake('OutThilda_A25C_500yr_q0.75.mat');
+A25C_100 = GetOceanCarbonUptake('OutThilda_A25C_500yr_q1.00.mat');
+
+B13C_025 = GetOceanCarbonUptake('OutThilda_B13C_500yr_q0.25.mat');
+B13C_050 = GetOceanCarbonUptake('OutThilda_B13C_500yr_q0.50.mat');
+B13C_075 = GetOceanCarbonUptake('OutThilda_B13C_500yr_q0.75.mat');
+B13C_100 = GetOceanCarbonUptake('OutThilda_B13C_500yr_q1.00.mat');
+
+B15C_025 = GetOceanCarbonUptake('OutThilda_B15C_500yr_q0.25.mat');
+B15C_050 = GetOceanCarbonUptake('OutThilda_B15C_500yr_q0.50.mat');
+B15C_075 = GetOceanCarbonUptake('OutThilda_B15C_500yr_q0.75.mat');
+B15C_100 = GetOceanCarbonUptake('OutThilda_B15C_500yr_q1.00.mat');
+
+%storing anomalies as vectors: 
+A23C = [A23C_025-A23C_100;
+        A23C_050-A23C_100;
+        A23C_075-A23C_100];
+
+A25C = [A25C_025-A25C_100;
+        A25C_050-A25C_100;
+        A25C_075-A25C_100];
+
+B13C = [B13C_025-B13C_100;
+        B13C_050-B13C_100;
+        B13C_075-B13C_100];
+
+B15C = [B15C_025-B15C_100;
+        B15C_050-B15C_100;
+        B15C_075-B15C_100];
+
+%plotting it into the same figure: 
+figure
+
+% A23C
+subplot(2,2,1)
+
+plot(time,A23C(1,:),'LineWidth',2)
+hold on
+plot(time,A23C(2,:),'LineWidth',2)
+plot(time,A23C(3,:),'LineWidth',2)
+
+yline(0,'k--','LineWidth',2)
+
+title('A23C')
+ylabel('\Delta Ocean Carbon Uptake (GtC)')
+legend('q=0.25','q=0.50','q=0.75')
+grid on
+
+% A25C
+subplot(2,2,2)
+
+plot(time,A25C(1,:),'LineWidth',2)
+hold on
+plot(time,A25C(2,:),'LineWidth',2)
+plot(time,A25C(3,:),'LineWidth',2)
+
+yline(0,'k--','LineWidth',2)
+
+title('A25C')
+grid on
+
+% B13C
+subplot(2,2,3)
+
+plot(time,B13C(1,:),'LineWidth',2)
+hold on
+plot(time,B13C(2,:),'LineWidth',2)
+plot(time,B13C(3,:),'LineWidth',2)
+
+yline(0,'k--','LineWidth',2)
+
+title('B13C')
+xlabel('Year')
+ylabel('\Delta Ocean Carbon Uptake (GtC)')
+grid on
+
+% B15C
+subplot(2,2,4)
+
+plot(time,B15C(1,:),'LineWidth',2)
+hold on
+plot(time,B15C(2,:),'LineWidth',2)
+plot(time,B15C(3,:),'LineWidth',2)
+
+yline(0,'k--','LineWidth',2)
+
+title('B15C')
+xlabel('Year')
+grid on
+
+
+%%% how relationship is between oceanic carbon uptake and scaled
+%%% circulation (check for linearity)
+%%% all in relation to oceanic carbon uptake at circulation scaled with 1
+%% 
+qscale = [0.25 0.50 0.75 1.00];
+
+
+A23C_final = [A23C_025(end)-A23C_100(end), ...
+              A23C_050(end)-A23C_100(end), ...
+              A23C_075(end)-A23C_100(end), ...
+              0];
+
+A25C_final = [A25C_025(end)-A25C_100(end), ...
+              A25C_050(end)-A25C_100(end), ...
+              A25C_075(end)-A25C_100(end), ...
+              0];
+
+B13C_final = [B13C_025(end)-B13C_100(end), ...
+              B13C_050(end)-B13C_100(end), ...
+              B13C_075(end)-B13C_100(end), ...
+              0];
+
+B15C_final = [B15C_025(end)-B15C_100(end), ...
+              B15C_050(end)-B15C_100(end), ...
+              B15C_075(end)-B15C_100(end), ...
+              0];
+
+Results = {A23C_final, A25C_final, B13C_final, B15C_final};
+Titles  = {'A23C','A25C','B13C','B15C'};
+
+figure
+
+for k = 1:4
+
+    subplot(2,2,k)
+    hold on
+
+    y = Results{k};
+
+    %Linear fit
+    p = polyfit(qscale,y,1);
+    yfit = polyval(p,qscale);
+
+    % R²
+    SSres = sum((y-yfit).^2);
+    SStot = sum((y-mean(y)).^2);
+    R2 = 1 - SSres/SStot;
+
+    %Plot data
+    scatter(qscale,y,80,'filled')
+
+    % Plot fitted line
+    plot(qscale,yfit,'k--','LineWidth',1.5)
+
+    %fit equation
+    text(0.67,0.4,...
+        sprintf('y = %.2f x %+ .2f',p(1),p(2)),...
+        'Units','normalized')
+
+    % Display R²
+    text(0.67,0.32,...
+        sprintf('R^2 = %.3f',R2),...
+        'Units','normalized')
+
+    title(Titles{k})
+    xlabel('Relative circulation strength')
+    ylabel('\Delta Ocean carbon uptake (GtC)')
+    legend('Model output','Linear fit','Location','southeast')
+    grid on
+    
+end
+
+sgtitle('Linearity - ocean carbon uptake response (500yr)')

@@ -1,5 +1,6 @@
 %zero forcing file
 %created june 2026
+%edited august 2026 to change climate sens (LWR) from 5C to 3C
 %purpose: to be used to show how circulation affects model output when
 %disregarding anthropogenic forcings.
 
@@ -14,7 +15,7 @@ co2seq2 = zeros(1,336/h);
 
 % Control parameters for setting long wave outgoing radiation
 
-LWR = [218.91 1.37];         %Clim. Sens. = 4.8C with LWR = [218.91 1.37]
+LWR = [211.13 1.93];         %Clim. Sens. = 3C with LWR = [211.83 1.93]
 
 % Control parameters for calculating CO2 release after 2100 AD
 % and sequestration characteristics, if applicable

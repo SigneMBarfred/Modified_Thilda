@@ -1,5 +1,6 @@
-function [kLL,kHL,kAT,kLB,kGS,srLL,srHL]= ODE_R(t,LL,HL,MHC,MHA,MHM,LWR,AT,LB,GS,GAw,GAc,...
+function [kLL,kHL,kAT,kLB,kGS,srLL,srHL,drho]= ODE_R(t,LL,HL,MHC,MHA,MHM,LWR,AT,LB,GS,GAw,GAc,...
     pCalLL,pCalHL,pOrgLL,pOrgHL,daint,co2emfos,co2emland,ch4em,co2seq1,co2seq2,k)
+%august 2026: above line modified to output drho
 
 % Ordinary Differential Equations for Thilda_R
 %
@@ -60,8 +61,11 @@ global ULL UHL LfLL LfHL Lxf Lyf rc fdiv sy mgt weLL weHL rVa rno rcp rcop
 
 % Ocean and atmospheric exchanges (see functions) 
 %-------------
-[q wLL wHL kvLL kvHL kh]          = OceExc_R(HL); %changed to accept HL in july 2026
-%[q wLL wHL kvLL kvHL kh]          = OceExc_R; %original
+%[q wLL wHL kvLL kvHL kh drho]          = OceExc_R(LL,HL); %changed to
+%accept HL+LL in aug 2026 (for dyn. evol. circ.
+%[q wLL wHL kvLL kvHL kh]          = OceExc_R(HL); %changed to accept HL in july 2026
+[q wLL wHL kvLL kvHL kh]          = OceExc_R; %original
+
 %-------------
 [mpra] = AtmAero_R(t,MHA);
 [QEBLL,QEBHL,QLL,QHL,aHLNI,Fw] = AtmEnerBal_R(t,LL(1,1),HL(1,1),LWR,AT,daint,mpra,k);
@@ -104,7 +108,8 @@ global ULL UHL LfLL LfHL Lxf Lyf rc fdiv sy mgt weLL weHL rVa rno rcp rcop
      %     mprc(:)=0;
      %  end
 
-     if t < 750*sy
+     %below should automatically take into account forcing file length
+     if k <= length(ch4em)
         ch4 = ch4em(k);
         co2fos = co2emfos(k);
         co2land = co2emland(k);

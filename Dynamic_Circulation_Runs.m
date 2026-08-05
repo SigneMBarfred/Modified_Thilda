@@ -8,10 +8,11 @@ global aLL
 ParVal_R
 
 
-fprintf('Running dynamic circulation simulation\n')
+fprintf('Running NEW! dynamic circulation simulation\n')
 
 Thilda_R
 
 movefile('OutThilda_R.mat', ...
-    'OutThilda_SSP3_dynamicCirc_10000yr.mat')
- 
+    'OutThilda_SSP3_3C_Hyst_dynamicCirc_ver2_10000yr.mat')
+
+

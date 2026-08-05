@@ -1,14 +1,14 @@
 function [daint,MHC,MHA,MHM,LWR,co2emfos,co2emland,ch4em,co2seq1,co2seq2]=ForceB1_3C(h)
 
 load NonGHG_B1img_HA.txt
-load CO2fosem_B1img.txt
-load CO2landem_B1img.txt
-load CH4em_B1img.txt
+load CO2fosem_B1img_GCB2024.txt
+load CO2landem_B1img_GCB2024.txt
+load CH4em_B1img_GMB2021.txt
 
 daint = interp1(NonGHG_B1img_HA,1:h:336); 
-co2emfos=interp1(CO2fosem_B1img,1:h:336); 
-co2emland = interp1(CO2landem_B1img, 1:h:336);
-ch4em = interp1(CH4em_B1img, 1:h:336); 
+co2emfos=interp1(CO2fosem_B1img_GCB2024,1:h:336); 
+co2emland = interp1(CO2landem_B1img_GCB2024, 1:h:336);
+ch4em = interp1(CH4em_B1img_GMB2021, 1:h:336); 
 co2seq1 = zeros(1,336/h);  
 co2seq2 = zeros(1,336/h); 
 
