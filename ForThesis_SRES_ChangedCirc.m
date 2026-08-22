@@ -1,0 +1,1100 @@
+%%  Plotting script for thesis section SRES SCENARIOS + SCALED + DYN
+%last edited: 5th of aug 2026
+%forcing: SRES
+%circulation: scaled and later, dynamic (v2)
+clear all
+close all
+%% load files
+
+scenarios = {'A23C','B13C'};
+qmult = [0.25 0.50 0.75 1.00 1.25 1.50];
+colors = lines(length(qmult));
+legendText = cell(1,length(qmult)+1);
+
+for i = 1:length(qmult)
+    legendText{i} = sprintf('q*%.2f',qmult(i));
+end
+legendText{end} = 'Dynamic';
+
+%time = st+1765
+
+%% Cumulated carbon
+%land, ocean, atmosphere, sediment
+%not necesarry to include in report but nice to have
+
+%% atmospheric CO2 diff to q*1 through time
+
+for s = 1:length(scenarios)
+    scenario = scenarios{s};
+
+    figure
+    hold on
+    box on
+
+    % Load reference run (q*1)
+    filename = sprintf( ...
+        'OutThilda_%s_incr_circ_10000yr_q1.00.mat', ...
+        scenario);
+    load(filename)
+    year = st + 1765;
+    time = st + 1765;
+    CO2ref = squeeze(sAT(4,1,:));
+
+    %plot scaled circ
+
+    for i = 1:length(qmult)
+        filename = sprintf( 'OutThilda_%s_incr_circ_10000yr_q%.2f.mat',scenario,qmult(i));
+        load(filename)
+        CO2 = squeeze(sAT(4,1,:));
+        plot(year,CO2-CO2ref, 'Color',colors(i,:), 'LineWidth',2)
+    end
+
+    %plot dyn circ
+    filename = sprintf('OutThilda_%s_dynamicCirc_ver2_10000yr.mat', scenario);
+    load(filename)
+    year = st + 1765;
+    CO2dyn = squeeze(sAT(4,1,:));
+    plot(year, CO2dyn-CO2ref, 'k:','LineWidth',3)
+
+    yline(0,'k:')
+    xlabel('Year')
+    ylabel('\Delta Atmospheric CO_2 (ppm)')
+    title(sprintf('%s: CO_2 anomaly relative to q*1',scenario))
+    xlim([time(1) time(end)])
+    legend(legendText,'Location','southeast')
+
+    grid on
+
+end
+
+
+%% Sediment: dissolution of carbonate through time
+%see if it matches the low atm co2 for 1765-2100 for high circ and how
+%there is a high atm co2 for this period for the scaled down circ
+
+%%Carbonate burial anomaly
+%% Carbonate burial anomaly relative to q*1
+
+for s = 1:length(scenarios)
+
+    scenario = scenarios{s};
+
+    figure
+    hold on
+    box on
+
+    %% Reference (q*1)
+
+    refFile = sprintf( ...
+        'OutThilda_%s_incr_circ_10000yr_q1.00.mat', ...
+        scenario);
+
+    load(refFile)
+
+    year = st + 1765;
+
+    [~,Ccarb_ref,~] = GetSedimentCarbonBurial(refFile);
+
+    %% Scaled runs
+
+    for i = 1:length(qmult)
+
+        filename = sprintf( ...
+            'OutThilda_%s_incr_circ_10000yr_q%.2f.mat', ...
+            scenario,qmult(i));
+
+        load(filename)
+
+        [~,Ccarb,~] = GetSedimentCarbonBurial(filename);
+
+        plot(year,...
+             Ccarb - Ccarb_ref,...
+             'Color',colors(i,:),...
+             'LineWidth',2)
+
+    end
+
+    %% Dynamic run
+
+    dynFile = sprintf( ...
+        'OutThilda_%s_dynamicCirc_ver2_10000yr.mat', ...
+        scenario);
+
+    load(dynFile)
+
+    [~,Ccarb_dyn,~] = GetSedimentCarbonBurial(dynFile);
+
+    plot(year,...
+         Ccarb_dyn - Ccarb_ref,...
+         'k:',...
+         'LineWidth',3)
+
+    %% Formatting
+
+    yline(0,'k:')
+
+    xlabel('Year')
+    ylabel('\Delta Carbonate burial (GtC yr^{-1})')
+    title(sprintf('%s: Carbonate burial anomaly relative to q*1',scenario))
+    xlim([time(1) time(end)])
+    legend(legendText,'Location','northeast')
+    grid on
+
+end
+
+%total burial
+%% Total carbon burial anomaly relative to q*1
+
+for s = 1:length(scenarios)
+
+    scenario = scenarios{s};
+
+    figure
+    hold on
+    box on
+
+    %% Reference (q*1)
+
+    refFile = sprintf( ...
+        'OutThilda_%s_incr_circ_10000yr_q1.00.mat', ...
+        scenario);
+
+    load(refFile)
+
+    year = st + 1765;
+
+    [~,~,Total_ref] = GetSedimentCarbonBurial(refFile);
+
+    %% Scaled runs
+
+    for i = 1:length(qmult)
+
+        filename = sprintf( ...
+            'OutThilda_%s_incr_circ_10000yr_q%.2f.mat', ...
+            scenario,qmult(i));
+
+        load(filename)
+
+        year = st + 1765;
+
+        [~,~,Total] = GetSedimentCarbonBurial(filename);
+
+        plot(year,...
+             Total - Total_ref,...
+             'Color',colors(i,:),...
+             'LineWidth',2)
+
+    end
+
+    %% Dynamic run
+
+    dynFile = sprintf( ...
+        'OutThilda_%s_dynamicCirc_ver2_10000yr.mat', ...
+        scenario);
+
+    load(dynFile)
+
+    year = st + 1765;
+
+    [~,~,Total_dyn] = GetSedimentCarbonBurial(dynFile);
+
+    plot(year,...
+         Total_dyn - Total_ref,...
+         'k:',...
+         'LineWidth',3)
+
+    %% Formatting
+
+    yline(0,'k:')
+
+    xlabel('Year')
+    ylabel('\Delta Total carbon burial (GtC yr^{-1})')
+    title(sprintf('%s: Total burial anomaly relative to q*1',scenario))
+    xlim([time(1) time(end)])
+    legend(legendText,'Location','northeast')
+    grid on
+
+end
+
+%% ocean carbon over time 
+for s = 1:length(scenarios)
+    scenario = scenarios{s};
+
+    figure
+    hold on
+    box on
+
+    %Reference run (q*1)
+    refFile = sprintf( ...
+        'OutThilda_%s_incr_circ_10000yr_q1.00.mat', ...
+        scenario);
+
+    load(refFile,'st')  %only load the time vector
+    year = st + 1765;
+    OceanRef = GetOceanCarbonUptake(refFile);
+
+    %scaled
+    for i = 1:length(qmult)
+
+        filename = sprintf( ...
+            'OutThilda_%s_incr_circ_10000yr_q%.2f.mat',scenario,qmult(i));
+
+        Ocean = GetOceanCarbonUptake(filename);
+
+        plot(year,Ocean - OceanRef, 'Color',colors(i,:),'LineWidth',2)
+    end
+
+    %Dynamic
+    dynFile = sprintf( ...
+        'OutThilda_%s_dynamicCirc_ver2_10000yr.mat', ...
+        scenario);
+
+    OceanDyn = GetOceanCarbonUptake(dynFile);
+
+    plot(year,...
+         OceanDyn - OceanRef,...
+         'k:',...
+         'LineWidth',3)
+
+
+    yline(0,'k:')
+
+    xlabel('Year')
+    ylabel('\Delta Ocean carbon uptake (GtC)')
+    title(sprintf('%s: Ocean Carbon Uptake anomaly relative to q*1',scenario))
+    xlim([time(1) time(end)])
+    legend(legendText,'Location','best')
+    grid on
+
+end
+%scaled
+
+
+%dynamic
+
+
+%overlay scaled and dynamic
+
+
+
+
+%% Evolution of carbon stored according to depth through time (heatmap)
+%% Carbon storage by depth
+%% Evolution of carbon stored according to depth
+% Relative to the q*1 circulation
+
+scenario = 'A23C';
+
+files = { ...
+    sprintf('OutThilda_%s_incr_circ_10000yr_q0.50.mat',scenario)
+    sprintf('OutThilda_%s_incr_circ_10000yr_q0.75.mat',scenario)
+    sprintf('OutThilda_%s_dynamicCirc_ver2_10000yr.mat',scenario)};
+
+rowNames = { ...
+    'Scaled q*0.50'
+    'Scaled q*0.75'
+    'Dynamic circulation'};
+
+% Load reference (q*1)
+
+refFile = sprintf( ...
+    'OutThilda_%s_incr_circ_10000yr_q1.00.mat', ...
+    scenario);
+
+[CarbonLL_ref,CarbonHL_ref] = GetOceanCarbonByLayer(refFile);
+
+% Geometry
+
+ParVal_R
+global dm d n
+
+depth = [dm dm+d*(1:n-1)];
+
+% Plot
+
+figure
+
+tiledlayout(3,2,...
+    'TileSpacing','compact',...
+    'Padding','compact')
+
+for i = 1:3
+
+    % Load current simulation
+
+    [CarbonLL,CarbonHL] = GetOceanCarbonByLayer(files{i});
+
+    % Difference relative to q*1
+    CarbonLL = CarbonLL - CarbonLL_ref;
+    CarbonHL = CarbonHL - CarbonHL_ref;
+
+    load(files{i},'st')
+
+    year = st + 1765;
+
+    % Low-latitude basin
+
+    nexttile
+
+    imagesc(year,depth,CarbonLL)
+
+    set(gca,'YDir','reverse')
+
+    if i==1
+        title('Low-latitude basin')
+    end
+
+    ylabel(sprintf('%s\n\nDepth (m)',rowNames{i}))
+
+    if i==3
+        xlabel('Year')
+    end
+
+    clim([-5 5])
+
+    % High-latitude basin
+
+    nexttile
+
+    imagesc(year,depth,CarbonHL)
+
+    set(gca,'YDir','reverse')
+
+    if i==1
+        title('High-latitude basin')
+    end
+
+    if i==3
+        xlabel('Year')
+    end
+
+    clim([-5 5])
+end
+
+colormap(parula)
+cb = colorbar;
+cb.Layout.Tile = 'east';
+cb.Label.String = '\Delta Carbon relative to q*1 (GtC)';
+
+sgtitle(sprintf('%s: Effect of weakened overturning on ocean carbon storage',scenario))%% Dynamic circ: plots of q (yaxis) through time (xaxis)
+
+%%%%%%%%%%%%%%
+%% amplified colors for heatmap dynamic
+
+%% heatmap for dynamic case with different CMAP 
+%% Evolution of carbon stored according to depth through time
+% SSP3: dynamic circulation
+% Carbon anomaly relative to SSP3 q*1
+
+scenario = 'B13C';
+
+% Dynamic circulation file
+dynFile = sprintf( ...
+    'OutThilda_%s_dynamicCirc_ver2_10000yr.mat', ...
+    scenario);
+
+load(dynFile, 'sqmax');
+avg_sqmax = mean(sqmax);
+
+fprintf('Average sqmax for %s dynamic circulation: %.6f\n', ...
+    scenario, avg_sqmax);
+
+
+
+% Reference: q*1
+refFile = sprintf( ...
+    'OutThilda_%s_incr_circ_10000yr_q1.00.mat', ...
+    scenario);
+load(refFile, 'sqmax');
+ref_sqmax = mean(sqmax);
+diff_sqmax = (avg_sqmax/ref_sqmax)*100;
+
+fprintf('Dyn sqmax avg for %s is this percentage of ref sqmax: %.6f\n', ...
+    scenario, diff_sqmax);
+
+
+
+% Get carbon by layer
+[CarbonLL_ref,CarbonHL_ref] = ...
+    GetOceanCarbonByLayer(refFile);
+[CarbonLL,CarbonHL] = ...
+    GetOceanCarbonByLayer(dynFile);
+
+% Difference relative to q*1
+CarbonLL = CarbonLL - CarbonLL_ref;
+CarbonHL = CarbonHL - CarbonHL_ref;
+
+% Model geometry
+ParVal_R
+global dm d n
+
+depth = [dm dm+d*(1:n-1)];
+
+% Time
+
+load(dynFile,'st')
+year = st + 1750;
+
+%Figure
+figure
+t = tiledlayout(1,2,...
+    'TileSpacing','compact',...
+    'Padding','compact');
+
+% Low latitude
+nexttile
+imagesc(year,depth,CarbonLL)
+set(gca,'YDir','reverse')
+title('Low-latitude basin')
+xlabel('Year')
+ylabel('Depth (m)')
+
+clim([-1 1])
+
+% High latitude
+nexttile
+imagesc(year,depth,CarbonHL)
+set(gca,'YDir','reverse')
+title('High-latitude basin')
+xlabel('Year')
+ylabel('Depth (m)')
+clim([-1 1])
+
+% Common colourbar
+
+colormap(hsv)
+cb = colorbar;
+cb.Layout.Tile = 'east';
+cb.Label.String = ...
+    '\Delta Carbon relative to q*1 (GtC)';
+
+sgtitle(sprintf( ...
+    'B13C: Dynamic circulation'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%%%%%%%%%%%
+
+
+
+
+%% LINEARITY Scaled circ: plot of ocean carbon uptake for each q at 
+% t=2100 AD, t=2765 AD, t=6765 AD, t=8000 AD, t=11765 AD
+%R^2 , linear? 
+%OCU relatiove to unchanged circulation
+scenario = 'A23C';
+
+q = [0.25 0.50 0.75 1.00 1.25 1.50];
+
+targetYears = [2100 2765 6765 8000 11765];
+labels = {'2100','2765','6765','8000','11765'};
+
+%Reference run (q*1)
+refFile = sprintf('OutThilda_%s_incr_circ_10000yr_q1.00.mat', ...
+    scenario);
+
+OceanRef = GetOceanCarbonUptake(refFile);
+
+load(refFile,'st')
+year = st + 1765;
+
+%get  uptake anomalies
+OCU = zeros(length(targetYears),length(q));
+
+for i = 1:length(q)
+
+    filename = sprintf( ...
+        'OutThilda_%s_incr_circ_10000yr_q%.2f.mat',scenario,q(i));
+
+    Ocean = GetOceanCarbonUptake(filename);
+
+    for j = 1:length(targetYears)
+        idx = find(year>=targetYears(j),1);
+        % Difference relative to q*1
+        OCU(j,i) = Ocean(idx) - OceanRef(idx);
+
+    end
+end
+
+%%Plot
+figure
+hold on
+
+colors = lines(length(targetYears));
+slopes = zeros(1,length(targetYears));
+R2vals = zeros(1,length(targetYears));
+
+for j = 1:length(targetYears)
+
+    % Linear regression
+    p = polyfit(q,OCU(j,:),1);
+
+    slope = p(1);
+    intercept = p(2);
+
+    yfit = polyval(p,q);
+
+    %R^2
+    SSres = sum((OCU(j,:) - yfit).^2);
+    SStot = sum((OCU(j,:) - mean(OCU(j,:))).^2);
+
+    R2 = 1 - SSres/SStot;
+
+    %Store values
+    slopes(j) = slope;
+    R2vals(j) = R2;
+
+    %print
+    fprintf('%5d: slope = %8.2f GtC/(q/q0),   R^2 = %.3f\n', ...
+        targetYears(j), slope, R2)
+
+    %Plot
+    h = plot(q,OCU(j,:),'o','MarkerSize',7,...
+        'MarkerFaceColor',colors(j,:),'Color',colors(j,:), ...
+        'DisplayName',sprintf('%s  R^2 = %.3f', ...
+                              labels{j}, R2));
+
+    %Plot fit
+    plot(q, yfit, '--','Color',h.Color,'LineWidth',1.5,'HandleVisibility','off')
+
+end
+
+yline(0,'k:','HandleVisibility','off')
+
+xlabel('Scaled overturning strength, q/q_0')
+ylabel('\Delta Ocean carbon uptake (GtC)')
+title(sprintf('%s',scenario))
+legend('Location','best')
+
+grid on
+box on
+
+
+
+
+%% q as a function of time for dynamic 
+
+
+figure
+hold on
+box on
+
+scenarioColors = [
+    0.0000 0.4470 0.7410   % blue (A23C)
+    0.8500 0.3250 0.0980   % orange (B13C)
+];
+
+lineStyles = {'-','--'};
+
+for s = 1:length(scenarios)
+
+    scenario = scenarios{s};
+
+    filename = sprintf(...
+        'OutThilda_%s_dynamicCirc_ver2_10000yr.mat', ...
+        scenario);
+
+    %Load data
+    load(filename,'st','sqmax')
+
+    year = st + 1765;
+
+    % Ocean carbon uptake (GtC)
+    Ocean = GetOceanCarbonUptake(filename);
+
+    % Convert overturning to Sverdrups
+    qSv = sqmax / 1e6;
+
+    %Main trajectory
+    plot(Ocean,...
+         qSv,...
+         'LineWidth',2.5,...
+         'Color',scenarioColors(s,:),...
+         'LineStyle',lineStyles{s},...
+         'DisplayName',scenario);
+
+    %Start marker
+    plot(Ocean(1),qSv(1),'^',...
+         'MarkerSize',9,...
+         'MarkerFaceColor',scenarioColors(s,:),...
+         'MarkerEdgeColor','k',...
+         'HandleVisibility','off');
+
+    %End marker
+    plot(Ocean(end),qSv(end),'v',...
+         'MarkerSize',9,...
+         'MarkerFaceColor',scenarioColors(s,:),...
+         'MarkerEdgeColor','k',...
+         'HandleVisibility','off');
+
+    %Direction markers every 2000 years
+    labelYears = 2000:2000:11000;
+
+    for k = 1:length(labelYears)
+
+        idx = find(year >= labelYears(k),1);
+
+        if ~isempty(idx)
+
+            % Direction marker
+            plot(Ocean(idx),...
+                 qSv(idx),...
+                 '>',...
+                 'MarkerSize',7,...
+                 'MarkerFaceColor',scenarioColors(s,:),...
+                 'MarkerEdgeColor','k',...
+                 'HandleVisibility','off');
+
+            % Year label
+            offset = 0.02 * (-1)^k;
+
+            text(Ocean(idx)+40,...
+                 qSv(idx)+offset,...
+                 sprintf('%d',labelYears(k)),...
+                 'FontSize',10,...
+                 'Color',scenarioColors(s,:));
+        end
+    end
+
+    %Print diagnostics
+    fprintf('%s:\\n',scenario)
+    fprintf('   Min q = %.3f Sv\\n',min(qSv))
+    fprintf('   Max q = %.3f Sv\\n',max(qSv))
+    fprintf('   Final ocean uptake = %.1f GtC\\n',Ocean(end))
+
+end
+
+%Formatting
+xlabel('Ocean carbon uptake (GtC) relative to 1765')
+ylabel('Overturning strength (Sv)')
+title('Dynamic overturning strength as a function of ocean carbon uptake')
+
+legend('Location','best')
+grid on
+set(gca,'FontSize',11)
+
+
+%%%%%%%%%%%%%%%%%%%%%
+
+%% q as a function of ocean carbon uptake anomaly
+%% relative to the unchanged-circulation run (q*1)
+
+figure
+hold on
+box on
+
+scenarioColors = [
+    0.0000 0.4470 0.7410   % blue (A23C)
+    0.8500 0.3250 0.0980   % orange (B13C)
+];
+
+lineStyles = {'-','--'};
+timeMarkers = {'o','s'};
+
+for s = 1:length(scenarios)
+
+    scenario = scenarios{s};
+
+    % Dynamic run
+    dynFile = sprintf(...
+        'OutThilda_%s_dynamicCirc_ver2_10000yr.mat', ...
+        scenario);
+
+    load(dynFile,'st','sqmax')
+
+    year = st + 1765;
+    qSv  = sqmax / 1e6;
+
+    OceanDyn = GetOceanCarbonUptake(dynFile);
+
+    % Reference run (q*1)
+    refFile = sprintf(...
+        'OutThilda_%s_incr_circ_10000yr_q1.00.mat', ...
+        scenario);
+
+    OceanRef = GetOceanCarbonUptake(refFile);
+
+    % Uptake anomaly relative to unchanged circulation
+    DeltaOcean = OceanDyn - OceanRef;
+
+    % Main trajectory
+    plot(DeltaOcean,...
+         qSv,...
+         'LineWidth',2.5,...
+         'Color',scenarioColors(s,:),...
+         'LineStyle',lineStyles{s},...
+         'DisplayName',scenario);
+
+    % Start marker (1765)
+    plot(DeltaOcean(1),qSv(1),'^',...
+         'MarkerSize',9,...
+         'MarkerFaceColor',scenarioColors(s,:),...
+         'MarkerEdgeColor','k',...
+         'HandleVisibility','off');
+
+    %End marker (~11765)
+    plot(DeltaOcean(end),qSv(end),'v',...
+         'MarkerSize',9,...
+         'MarkerFaceColor',scenarioColors(s,:),...
+         'MarkerEdgeColor','k',...
+         'HandleVisibility','off');
+
+    % Mark and label every 1000 years
+    labelYears = 2000:2000:11000;
+
+    for k = 1:length(labelYears)
+
+        idx = find(year >= labelYears(k),1);
+
+        if ~isempty(idx)
+
+            % Marker at this time
+            plot(DeltaOcean(idx),...
+                 qSv(idx),...
+                 timeMarkers{s},...
+                 'MarkerSize',6,...
+                 'MarkerFaceColor','white',...
+                 'MarkerEdgeColor',scenarioColors(s,:),...
+                 'LineWidth',1.2,...
+                 'HandleVisibility','off');
+            % Alternate label position slightly above/below the curve
+            yoff = -0.025 * (-1)^k;
+            text(DeltaOcean(idx)+0.15,...
+                 qSv(idx)+yoff,...
+                 sprintf('%d',labelYears(k)),...
+                 'FontSize',10,...
+                 'Color',scenarioColors(s,:));
+        end
+    end
+
+    %Diagnostics
+    fprintf('%s:\\n',scenario)
+    fprintf('   Final ΔOCU = %.1f GtC\\n',DeltaOcean(end))
+    fprintf('   q range = %.3f–%.3f Sv\\n',min(qSv),max(qSv))
+end
+%Formatting
+xline(0,'k:','HandleVisibility','off')
+xlabel('\Delta Ocean carbon uptake relative to q*1 (GtC)')
+ylabel('Overturning strength (Sv)')
+title('Dynamic overturning strength vs. circulation-induced ocean carbon uptake')
+legend('Location','best')
+grid on
+set(gca,'FontSize',11)
+
+
+%%%%%%%%%%%%%%%
+
+
+
+%% tables??? 
+
+%% TABLE: how much ocean carbon for given circulations? 
+
+%rows: q/q0 = 0.25, 0.50, 0.75, 1, 1.25, 1.50 and dyn
+%columns: Ocean carbon uptake relative to 1765 for: 2100, 2765, 6765, 8000,
+%11765. rightmost column: Delta C burial at 11765
+scenario = 'A23C';   % change to 'B13C' when needed
+
+qmult = [0.25 0.50 0.75 1.00 1.25 1.50];
+targetYears = [2100 2765 6765 8000 11765];
+
+nq = length(qmult);
+
+%Reference burial (q*1)
+refFile = sprintf(...
+    'OutThilda_%s_incr_circ_10000yr_q1.00.mat', ...
+    scenario);
+
+load(refFile,'st')
+yearRef = st + 1765;
+
+[~,~,TotalRef] = GetSedimentCarbonBurial(refFile);
+
+% Cumulative burial in GtC
+CumBurialRef = cumtrapz(st, -TotalRef);
+RefBurial10k = CumBurialRef(end);
+
+%Preallocate
+OCU_table = zeros(nq+1, length(targetYears));   % +1 for dynamic
+DeltaBurial = zeros(nq+1,1);
+
+rowNames = cell(nq+1,1);
+
+%Scaled circulation runs
+for iq = 1:nq
+
+    rowNames{iq} = sprintf('q*%.2f', qmult(iq));
+
+    filename = sprintf(...
+        'OutThilda_%s_incr_circ_10000yr_q%.2f.mat', ...
+        scenario, qmult(iq));
+
+    load(filename,'st')
+    year = st + 1765;
+
+    %Ocean carbon uptake
+    Ocean = GetOceanCarbonUptake(filename);
+
+    for it = 1:length(targetYears)
+        idx = find(year >= targetYears(it),1);
+        OCU_table(iq,it) = Ocean(idx);
+    end
+
+    %Burial anomaly relative to q*1
+    [~,~,Total] = GetSedimentCarbonBurial(filename);
+
+    CumBurial = cumtrapz(st, -Total);
+
+    DeltaBurial(iq) = CumBurial(end) - RefBurial10k;
+
+end
+
+%Dynamic circulation run
+rowNames{end} = 'Dynamic';
+
+dynFile = sprintf(...
+    'OutThilda_%s_dynamicCirc_ver2_10000yr.mat', ...
+    scenario);
+
+load(dynFile,'st')
+year = st + 1765;
+
+OceanDyn = GetOceanCarbonUptake(dynFile);
+
+for it = 1:length(targetYears)
+    idx = find(year >= targetYears(it),1);
+    OCU_table(end,it) = OceanDyn(idx);
+end
+
+[~,~,TotalDyn] = GetSedimentCarbonBurial(dynFile);
+CumBurialDyn = cumtrapz(st, -TotalDyn);
+
+DeltaBurial(end) = CumBurialDyn(end) - RefBurial10k;
+
+%Build MATLAB table
+TableOCU = table(...
+    rowNames,...
+    OCU_table(:,1),...
+    OCU_table(:,2),...
+    OCU_table(:,3),...
+    OCU_table(:,4),...
+    OCU_table(:,5),...
+    DeltaBurial,...
+    'VariableNames',{...
+        'Circulation',...
+        'OCU_2100',...
+        'OCU_2765',...
+        'OCU_6765',...
+        'OCU_8000',...
+        'OCU_11765',...
+        'DeltaBurial_11765'});
+
+disp(TableOCU)
+
+%% TABLE: Where is the carbon? 
+%percent C in surface, perfent C in column, percent C in deep
+% For A23C and B13C relative to q*1
+% Keep only rows that are NOT q*=1
+qmult = [0.25 0.50 0.75 1.00 1.25 1.50];
+nq = length(qmult);
+
+ParVal_R
+global dm d n
+
+depth = [dm dm+d*(1:n-1)];
+
+idx_surface      = depth <= 200;
+idx_intermediate = depth > 200 & depth <= 2000;
+idx_deep         = depth > 2000;
+
+% Preallocate
+C_LL = zeros(nq,n);
+C_HL = zeros(nq,n);
+OCU  = zeros(nq,1);
+
+% Load all scaled runs for THIS scenario
+for iq = 1:nq
+
+    filename = sprintf( ...
+        'OutThilda_%s_incr_circ_10000yr_q%.2f.mat', ...
+        scenario,qmult(iq));
+
+    %%Carbon by layer
+    [CarbonLL,CarbonHL] = GetOceanCarbonByLayer(filename);
+
+    C_LL(iq,:) = CarbonLL(:,end)';
+    C_HL(iq,:) = CarbonHL(:,end)';
+
+    % Final ocean carbon uptake
+    Ocean = GetOceanCarbonUptake(filename);
+    OCU(iq) = Ocean(end);
+
+end
+
+% Reference index (q*=1)
+iref = find(qmult == 1);
+
+% Anomalies relative to q*=1
+DeltaLL   = C_LL - C_LL(iref,:);
+DeltaHL   = C_HL - C_HL(iref,:);
+Delta_OCU = OCU  - OCU(iref);
+
+% =========================================================
+% Vertical distribution for the SCALED runs
+% =========================================================
+
+C_surface = ...
+    sum(DeltaLL(:,idx_surface),2) + ...
+    sum(DeltaHL(:,idx_surface),2);
+
+C_intermediate = ...
+    sum(DeltaLL(:,idx_intermediate),2) + ...
+    sum(DeltaHL(:,idx_intermediate),2);
+
+C_deep = ...
+    sum(DeltaLL(:,idx_deep),2) + ...
+    sum(DeltaHL(:,idx_deep),2);
+
+% Total ocean carbon anomaly
+C_total = C_surface + C_intermediate + C_deep;
+
+% Convert to percentages
+f_surface      = 100*C_surface./C_total;
+f_intermediate = 100*C_intermediate./C_total;
+f_deep         = 100*C_deep./C_total;
+
+% =========================================================
+% Latitudinal distribution for the SCALED runs
+% =========================================================
+
+C_LL_total = sum(DeltaLL,2);
+C_HL_total = sum(DeltaHL,2);
+
+f_LL = 100*C_LL_total./C_total;
+f_HL = 100*C_HL_total./C_total;
+
+keep = qmult ~= 1;
+
+% --- Dynamic circulation row ---
+dynFile = sprintf(...
+    'OutThilda_%s_dynamicCirc_ver2_10000yr.mat', ...
+    scenario);
+
+[CarbonLL_dyn,CarbonHL_dyn] = GetOceanCarbonByLayer(dynFile);
+
+% Final timestep
+CarbonLL_dyn = CarbonLL_dyn(:,end)';
+CarbonHL_dyn = CarbonHL_dyn(:,end)';
+
+% Anomaly relative to q*=1
+DeltaLL_dyn = CarbonLL_dyn - C_LL(iref,:);
+DeltaHL_dyn = CarbonHL_dyn - C_HL(iref,:);
+
+% Vertical distribution
+Csurf_dyn = sum(DeltaLL_dyn(idx_surface)) + ...
+            sum(DeltaHL_dyn(idx_surface));
+
+Cint_dyn  = sum(DeltaLL_dyn(idx_intermediate)) + ...
+            sum(DeltaHL_dyn(idx_intermediate));
+
+Cdeep_dyn = sum(DeltaLL_dyn(idx_deep)) + ...
+            sum(DeltaHL_dyn(idx_deep));
+
+Ctot_dyn = Csurf_dyn + Cint_dyn + Cdeep_dyn;
+
+f_surface_dyn      = 100*Csurf_dyn/Ctot_dyn;
+f_intermediate_dyn = 100*Cint_dyn/Ctot_dyn;
+f_deep_dyn         = 100*Cdeep_dyn/Ctot_dyn;
+
+% Latitudinal distribution
+CLL_dyn = sum(DeltaLL_dyn);
+CHL_dyn = sum(DeltaHL_dyn);
+
+f_LL_dyn = 100*CLL_dyn/Ctot_dyn;
+f_HL_dyn = 100*CHL_dyn/Ctot_dyn;
+
+% Dynamic OCU anomaly
+OceanDyn = GetOceanCarbonUptake(dynFile);
+Delta_OCU_dyn = OceanDyn(end) - OCU(iref);
+
+% --- Build final table ---
+
+% Scaled rows (excluding q*=1)
+% Row names (exclude q*=1 and add Dynamic)
+scaledNames = cellstr(compose('q*=%.2f', qmult(keep)))';
+rowNames = [scaledNames; {'Dynamic'}];
+
+T = table(...
+    rowNames,...
+    [f_surface(keep);      f_surface_dyn],...
+    [f_intermediate(keep); f_intermediate_dyn],...
+    [f_deep(keep);         f_deep_dyn],...
+    [f_LL(keep);           f_LL_dyn],...
+    [f_HL(keep);           f_HL_dyn],...
+    [Delta_OCU(keep);      Delta_OCU_dyn],...
+    'VariableNames',{...
+        'Circulation',...
+        'Surface_pct',...
+        'Intermediate_pct',...
+        'Deep_pct',...
+        'LL_pct',...
+        'HL_pct',...
+        'Delta_OCU_GtC'});
+
+fprintf('\\n===== %s =====\\n',scenario)
+disp(T)
+
+
+
+
+
+%%%%% sediment
+%plot sediment? 
+
+
+[CorgBurial,CcarbBurial,TotalBurial] = ...
+    GetSedimentCarbonBurial( ...
+    'OutThilda_A23C_incr_circ_10000yr_q0.50.mat');
+
+[min(CorgBurial) max(CorgBurial)]
+[min(CcarbBurial) max(CcarbBurial)]
+
+
+load('OutThilda_A23C_incr_circ_10000yr_q0.50.mat','st')
+
+CumCorg = cumtrapz(st,CorgBurial);
+CumCarb = cumtrapz(st,CcarbBurial);
+
+CumTotal = cumtrapz(st,TotalBurial);
+disp(CumTotal)
+
+%plot
+figure
+plot(st+1765,CorgBurial,'LineWidth',1.5)
+hold on
+plot(st+1765,CcarbBurial,'LineWidth',1.5)
+plot(st+1765,TotalBurial,'LineWidth',1.5)
+
+xlabel('Year')
+ylabel('Carbon burial (GtC yr^{-1})')
+legend('Organic C','CaCO_3-C','Total C')
+grid on
+
+
+%%%%%%%%%
+
+%% TABLE: Linearity data but as columns 
+%same data as used in the Linearity Scaled plot
+
+

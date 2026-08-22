@@ -22,7 +22,7 @@ fprintf('Difference in atm CO2 %.6f ppm \n',pCO2(end)-pCO2(1))
 
 
 figure
-plot(time,dpCO2,'LineWidth',2)
+plot(time,dpCO2,'g','LineWidth',2)
 xlabel('Year')
 ylabel('\Delta Atmospheric CO_2 (ppm)')
 xlim([time(1) time(end)])
@@ -52,7 +52,7 @@ fprintf('Difference in glob mean temp %.6f deg \n',Tglob(end)-Tglob(1))
 
 %Plotting
 figure
-plot(time,dTglob,'LineWidth',2)
+plot(time,dTglob,'r','LineWidth',2)
 xlabel('Year')
 ylabel('\Delta Global mean temperature (^\circC)')
 xlim([time(1) time(end)])
@@ -110,17 +110,71 @@ grid on
 %observed: variation of roughly 2 *10^-3 mol/m^3 over 10k yr - could be
 %because zero anthropogenic forcing does not mean zero internal fluxes? or
 %response to the small drift in anthropogenic CO2? 
+%%
+% in the same figure
 
+
+%Plotting Ocean DIC
+
+% Low latitude
+DICsurf = squeeze(sLL(4,1,:));
+
+fprintf('Start value DIC surf LL %.6f mol pr m3 \n', DICsurf(1))
+fprintf('End value DIC surf LL %.6f mol pr m3 \n', DICsurf(end))
+
+dDIC = DICsurf - DICsurf(1);
+
+fprintf('Difference in DIC in LL %.6f mol pr m3 \n', ...
+    DICsurf(end)-DICsurf(1))
+
+% High latitude
+DICsurfHL = squeeze(sHL(4,1,:));
+
+fprintf('Start value DIC surf HL %.6f mol pr m3 \n', DICsurfHL(1))
+fprintf('End value DIC surf HL %.6f mol pr m3 \n', DICsurfHL(end))
+
+dDICHL = DICsurfHL - DICsurfHL(1);
+
+fprintf('Difference in DIC in HL %.6f mol pr m3 \n', ...
+    DICsurfHL(end)-DICsurfHL(1))
+
+
+% Plot
+
+figure
+hold on
+
+plot(time,dDIC, ...
+    'LineWidth',2, ...
+    'DisplayName','Low latitude')
+
+plot(time,dDICHL, ...
+    'LineWidth',2, ...
+    'DisplayName','High latitude')
+
+xlabel('Year')
+ylabel('\Delta Surface DIC (mol m^{-3})')
+xlim([time(1) time(end)])
+
+title('Surface ocean DIC drift')
+
+legend('Location','best')
+grid on
+box on
+hold off
+
+
+%%
 %% Ocean water column carbon
 OceanCarbon = GetOceanCarbonInventory( ...
-    'OutThilda_Zero_incr_circ_10000yr_q1.00.mat');
+    'OutThilda_Zero_3C_incr_circ_10000yr_q1.00.mat');
 fprintf('Start value ocean carbon %.6f GtC \n',OceanCarbon(1))
 fprintf('End value ocean carbon %.6f GtC \n',OceanCarbon(end))
 dOcean = OceanCarbon - OceanCarbon(1);
 fprintf('Difference in ocean carbon %.6f GtC \n',OceanCarbon(end)-OceanCarbon(1))
 
 figure
-plot(time,dOcean,'LineWidth',2)
+plot(time,dOcean,'k','LineWidth',2)
 xlabel('Year')
 ylabel('\Delta Ocean carbon (GtC)')
 xlim([time(1) time(end)])

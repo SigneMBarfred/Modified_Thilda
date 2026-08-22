@@ -1,0 +1,409 @@
+%control_zero_plot
+%checking if variables remain somewhat close to initial values ie if
+%simuation is numerically stable
+close all
+ParVal_R
+global fdiv 
+
+%load('OutThilda_Zero_incr_circ_10000yr_q1.00.mat')
+load('OutThilda_ZeroForce_dynamicCirc_10000yr.mat')
+time = st+1765;
+
+
+size(sLB)
+
+%% plot the atmospheric co2:
+pCO2 = squeeze(sAT(4,1,:))*1e6; %index 1 bc assume identical for 2 hemispheres
+dpCO2 = pCO2 - pCO2(1);
+fprintf('Start value atm CO2 %.6f ppm \n',pCO2(1))
+fprintf('End value atm CO2 %.6f ppm \n',pCO2(end))
+fprintf('Difference in atm CO2 %.6f ppm \n',pCO2(end)-pCO2(1))
+
+
+
+figure
+plot(time,dpCO2,'g','LineWidth',2)
+xlabel('Year')
+ylabel('\Delta Atmospheric CO_2 (ppm)')
+xlim([time(1) time(end)])
+title('Atmospheric CO_2 drift with zero forcing, circulation unchanged')
+grid on
+%seeing a small drift of approx 6ppm for 10000 yr, could be insignificant,
+%as preindustrial lvl is approx 280ppm
+
+%% plotting temperature: 
+%calculating global mean temp just as in the last lines of Thilda_R
+%DCESS has 2 atmospheric boxes(low and high latitude) - tglob is area
+%weighted meanof the two. fdiv is the latitude that divides low and high
+
+Tglob = squeeze(sAT(1,1,:))*sin(fdiv) + ...
+        squeeze(sAT(1,2,:))*(1-sin(fdiv));
+
+Tglob = Tglob(:);
+
+%Change relative to initial state
+dTglob = Tglob - Tglob(1);
+
+fprintf('Start value glob mean temp %.6f deg \n',Tglob(1))
+fprintf('End value glob mean temp %.6f deg \n',Tglob(end))
+fprintf('Difference in glob mean temp %.6f deg \n',Tglob(end)-Tglob(1))
+
+
+
+%Plotting
+figure
+plot(time,dTglob,'r','LineWidth',2)
+xlabel('Year')
+ylabel('\Delta Global mean temperature (^\circC)')
+xlim([time(1) time(end)])
+title('Global mean temperature drift with zero forcing, circulation unchanged')
+grid on
+
+%why is there a small drift? could be that Res_thildaPI is created by
+%iterating until changes became quite small (but not quite zero), so over
+%long timescales it carries 
+
+%could also be that it approaches a new equilibrium? but why if model is
+%calibrated to a steady state preindustrial scenario??
+
+
+
+%% plotting Ocean DIC 
+%low latitude
+
+DICsurf = squeeze(sLL(4,1,:));     %tracer 4, surface layer
+
+fprintf('Start value DIC surf LL %.6f mol pr m3 \n',DICsurf(1))
+fprintf('End value DIC surf LL %.6f mol pr m3 \n',DICsurf(end))
+dDIC = DICsurf - DICsurf(1);
+
+fprintf('Difference in DIC in LL %.6f mol pr m3 \n',DICsurf(end)-DICsurf(1))
+
+
+figure
+plot(time,dDIC,'LineWidth',2)
+xlabel('Year')
+ylabel('\Delta Surface DIC (mol m^{-3})')
+xlim([time(1) time(end)])
+title('Surface ocean DIC drift, low latitude, unchanged circulation')
+grid on
+
+
+%high latitude
+DICsurfHL = squeeze(sHL(4,1,:));
+
+fprintf('Start value DIC surf HL %.6f mol pr m3 \n',DICsurfHL(1))
+fprintf('End value DIC surf HL %.6f mol pr m3 \n',DICsurfHL(end))
+
+dDICHL = DICsurfHL - DICsurfHL(1);
+
+fprintf('Difference in DIC in HL %.6f mol pr m3 \n',DICsurfHL(end)-DICsurfHL(1))
+
+
+figure
+plot(time,dDICHL,'LineWidth',2)
+xlabel('Year')
+ylabel('\Delta Surface DIC (mol m^{-3})')
+xlim([time(1) time(end)])
+title('Surface ocean DIC drift, high latitude, unchanged circulation')
+grid on
+%observed: variation of roughly 2 *10^-3 mol/m^3 over 10k yr - could be
+%because zero anthropogenic forcing does not mean zero internal fluxes? or
+%response to the small drift in anthropogenic CO2? 
+%%
+% in the same figure
+
+
+%Plotting Ocean DIC
+
+% Low latitude
+DICsurf = squeeze(sLL(4,1,:));
+
+fprintf('Start value DIC surf LL %.6f mol pr m3 \n', DICsurf(1))
+fprintf('End value DIC surf LL %.6f mol pr m3 \n', DICsurf(end))
+
+dDIC = DICsurf - DICsurf(1);
+
+fprintf('Difference in DIC in LL %.6f mol pr m3 \n', ...
+    DICsurf(end)-DICsurf(1))
+
+% High latitude
+DICsurfHL = squeeze(sHL(4,1,:));
+
+fprintf('Start value DIC surf HL %.6f mol pr m3 \n', DICsurfHL(1))
+fprintf('End value DIC surf HL %.6f mol pr m3 \n', DICsurfHL(end))
+
+dDICHL = DICsurfHL - DICsurfHL(1);
+
+fprintf('Difference in DIC in HL %.6f mol pr m3 \n', ...
+    DICsurfHL(end)-DICsurfHL(1))
+
+
+% Plot
+
+figure
+hold on
+
+plot(time,dDIC, ...
+    'LineWidth',2, ...
+    'DisplayName','Low latitude')
+
+plot(time,dDICHL, ...
+    'LineWidth',2, ...
+    'DisplayName','High latitude')
+
+xlabel('Year')
+ylabel('\Delta Surface DIC (mol m^{-3})')
+xlim([time(1) time(end)])
+
+title('Surface ocean DIC drift, unchanged circulation')
+
+legend('Location','best')
+grid on
+
+hold off
+
+
+%%
+%% Ocean water column carbon
+OceanCarbon = GetOceanCarbonInventory( ...
+    'OutThilda_Zero_3C_incr_circ_10000yr_q1.00.mat');
+fprintf('Start value ocean carbon %.6f GtC \n',OceanCarbon(1))
+fprintf('End value ocean carbon %.6f GtC \n',OceanCarbon(end))
+dOcean = OceanCarbon - OceanCarbon(1);
+fprintf('Difference in ocean carbon %.6f GtC \n',OceanCarbon(end)-OceanCarbon(1))
+
+figure
+plot(time,dOcean,'LineWidth',2)
+xlabel('Year')
+ylabel('\Delta Ocean carbon (GtC)')
+xlim([time(1) time(end)])
+title('Total ocean carbon drift')
+grid on
+%The ocean in inventory includes dissolved inorganic carbon in the water
+%column only
+
+
+
+%% sediment
+%checking if this part is active ie changes through time
+figure
+
+subplot(2,2,1)
+plot(time,squeeze(mean(dwcLL,1)),'LineWidth',2)
+title('Mean calcite dry weight fraction')
+xlabel('Year')
+ylabel('Dry weight fraction')
+xlim([time(1) time(end)])
+grid on
+
+subplot(2,2,2)
+plot(time,squeeze(mean(dworgCLL,1)),'LineWidth',2)
+title('Mean organic matter dry weight fraction')
+xlabel('Year')
+ylabel('Dry weight fraction')
+xlim([time(1) time(end)])
+grid on
+
+subplot(2,2,3)
+plot(time,squeeze(mean(pCalCLL,1)),'LineWidth',2)
+title('Mean calcite dissolution')
+xlabel('Year')
+ylabel('Fraction dissolved')
+xlim([time(1) time(end)])
+grid on
+
+subplot(2,2,4)
+plot(time,squeeze(mean(pOrgCLL,1)),'LineWidth',2)
+title('Mean organic matter remineralization')
+xlabel('Year')
+ylabel('Fraction remineralized')
+xlim([time(1) time(end)])
+grid on
+
+sgtitle('Evolution of sediment variables under zero forcing')
+%is active and could explain the change in carbon in the ocean water
+%column? 
+
+%% Just as a diagnotistic, also consider land biosphere 
+%contains 4 reservoirs as defined in ODE_R
+%% Land carbon inventory
+
+LandCarbon = squeeze( ...
+      sLB(1,1,:) + ...
+      sLB(2,1,:) + ...
+      sLB(3,1,:) + ...
+      sLB(4,1,:) );
+
+LandCarbon = LandCarbon(:);
+dLand = LandCarbon - LandCarbon(1);
+
+figure
+plot(time,dLand,'LineWidth',2)
+xlabel('Year')
+ylabel('\Delta Land carbon (GtC)')
+title('Land carbon drift during the 10\,000-year zero-forcing simulation')
+grid on
+
+fprintf('Initial land carbon: %.2f GtC\n', LandCarbon(1))
+fprintf('Final land carbon:   %.2f GtC\n', LandCarbon(end))
+fprintf('Change:              %.2f GtC\n', LandCarbon(end)-LandCarbon(1))
+
+%shows small increase:
+%Initial land carbon: 1111.01 GtC
+%Final land carbon:   1121.73 GtC
+%Change:              +10.72 GtC
+
+
+
+%% plot dynamic circulation strength
+A23C = load('OutThilda_A23C_dynamicCirc_10000yr.mat');
+A25C = load('OutThilda_A25C_dynamicCirc_10000yr.mat');
+B13C = load('OutThilda_B13C_dynamicCirc_10000yr.mat');
+B15C = load('OutThilda_B15C_dynamicCirc_10000yr.mat');
+
+figure
+plot(st+1765,sqmax/1e6, 'LineWidth',2)
+hold on
+plot(A23C.st+1765, A23C.sqmax/1e6, 'LineWidth',2)
+plot(A25C.st+1765, A25C.sqmax/1e6, 'LineWidth',2)
+plot(B13C.st+1765, B13C.sqmax/1e6, 'LineWidth',2)
+plot(B15C.st+1765, B15C.sqmax/1e6, 'LineWidth',2)
+
+
+xlabel('Year')
+ylabel('Overturning circulation (Sv)')
+xlim([time(1) time(end)])
+legend('Zero forcing','A2 3C', 'A2 5C','B1 3C', 'B1 5C','Location','best')
+title('Dynamically adjusted circulation strength for 5 emission scenarios')
+grid on
+
+
+
+
+
+%% relation between carbon in ocean and dynamically evolved circulation strength
+Zero_Ocean_Carbon = GetOceanCarbonUptake('OutThilda_ZeroForce_dynamicCirc_10000yr.mat');
+A23C_Ocean_Carbon  = GetOceanCarbonUptake('OutThilda_A23C_dynamicCirc_10000yr.mat');
+A25C_Ocean_Carbon  = GetOceanCarbonUptake('OutThilda_A25C_dynamicCirc_10000yr.mat');
+B13C_Ocean_Carbon  = GetOceanCarbonUptake('OutThilda_B13C_dynamicCirc_10000yr.mat');
+B15C_Ocean_Carbon  = GetOceanCarbonUptake('OutThilda_B15C_dynamicCirc_10000yr.mat');
+
+
+
+figure
+plot(sqmax/1e6, Zero_Ocean_Carbon,'LineWidth',2)
+hold on
+
+plot(A23C.sqmax/1e6, A23C_Ocean_Carbon,'LineWidth',2)
+plot(A25C.sqmax/1e6, A25C_Ocean_Carbon,'LineWidth',2)
+plot(B13C.sqmax/1e6, B13C_Ocean_Carbon,'LineWidth',2)
+plot(B15C.sqmax/1e6, B15C_Ocean_Carbon,'LineWidth',2)
+
+xlabel('Overturning circulation (Sv)')
+ylabel('Cumulative Ocean Carbon Uptake (GtC)')
+legend('Zero forcing','A2 3C','A2 5C','B1 3C','B1 5C')
+grid on
+%transient behaviour? 
+
+%with scatterplot/colourbar: 
+%% Plot ocean carbon inventory change vs. circulation strength
+
+idx = 1:10:length(st);      %marker pr 10th point
+
+figure
+hold on
+
+%Zero forcing
+h1 = plot(sqmax/1e6, Zero_Ocean_Carbon,'-', 'LineWidth',1.5)
+
+scatter(sqmax(idx)/1e6,Zero_Ocean_Carbon(idx),25,st(idx)+1765,'filled')
+
+%A2 3C
+
+h2 = plot(A23C.sqmax/1e6,A23C_Ocean_Carbon,'--','LineWidth',1.5)
+
+scatter(A23C.sqmax(idx)/1e6,A23C_Ocean_Carbon(idx),25,...
+        A23C.st(idx)+1765,'filled')
+
+% A2 5C
+h3 = plot(A25C.sqmax/1e6,A25C_Ocean_Carbon,'-.','LineWidth',1.5)
+
+scatter(A25C.sqmax(idx)/1e6,A25C_Ocean_Carbon(idx),25,A25C.st(idx)+1765,...
+        'filled')
+
+%B13C
+h4  = plot(B13C.sqmax/1e6,B13C_Ocean_Carbon,':','LineWidth',2)
+
+scatter(B13C.sqmax(idx)/1e6,B13C_Ocean_Carbon(idx),25,B13C.st(idx)+1765,...
+        'filled')
+
+%B15C
+h5 = plot(B15C.sqmax/1e6, B15C_Ocean_Carbon,'-','LineWidth',2)
+
+scatter(B15C.sqmax(idx)/1e6, B15C_Ocean_Carbon(idx),25, B15C.st(idx)+1765,...
+        'filled')
+
+xlabel('Overturning circulation (Sv)')
+ylabel('\Delta Ocean carbon inventory (GtC)')
+
+legend([h1 h2 h3 h4 h5], 'Zero forcing','A2 3C','A2 5C','B1 3C', ...
+    'B1 5C','Location','best')
+title(['Cumulative increase in ocean carbon as a function' ...
+    ' of dynamic circulation strength'])
+cb = colorbar;
+cb.Label.String = 'Year';
+
+grid on
+box on
+
+
+
+%% dynamic circulation: where in the ocean is carbon stored: 
+ParVal_R
+global dm d n
+
+[CarbonLL,CarbonHL] = GetOceanCarbonByLayer('OutThilda_ZeroForce_dynamicCirc_10000yr.mat');
+
+year = st + 1765;
+depth = [dm dm+d*(1:n-1)];
+
+figure
+
+subplot(1,2,1)
+
+imagesc(year,depth,CarbonLL)
+% hold on
+% contour(year,depth,CarbonLL,[0 0],'k','LineWidth',1.5)%show where carbon
+% uptake changes sign
+set(gca,'YDir','reverse')
+xlabel('Year')
+ylabel('Depth (m)')
+title('Low latitudes')
+clim([-5 100])
+
+cb = colorbar;
+cb.Label.String = '\Delta Carbon inventory (GtC)';
+
+subplot(1,2,2)
+
+imagesc(year,depth,CarbonHL)
+% hold on
+% contour(year,depth,CarbonHL,[0 0],'k','LineWidth',1.5)
+set(gca,'YDir','reverse')
+xlabel('Year')
+ylabel('Depth (m)')
+title('High latitudes')
+clim([-5 100])
+
+cb = colorbar;
+cb.Label.String = '\Delta Carbon inventory (GtC)';
+
+sgtitle('Zero Forcing: Time evolution of oceanic DIC relative to 1765 with depth')
+
+
+min(CarbonLL(:))
+max(CarbonLL(:))
+
+min(CarbonHL(:))
+max(CarbonHL(:))

@@ -1,0 +1,866 @@
+%%  Plotting script for thesis section ZERO FORCE + SCALED + DYN
+%last edited: 5th of aug 2026
+%forcing: zero forcing
+%circulation: scaled and later, dynamic (v2)
+
+%% setup 
+clear
+close all
+ParVal_R
+
+qmult = [0.25 0.50 0.75 1.00 1.25 1.50];
+
+col = lines(length(qmult));
+
+%time = st + 1765
+
+%Reference run is q*1
+iref = find(qmult==1);
+
+filename = sprintf( ...
+    'OutThilda_Zero_3C_incr_circ_10000yr_q%.2f.mat', ...
+    qmult(iref));
+
+load(filename)
+time = st + 1765;
+%% Cumulated carbon for q*1
+%changes in the 3 main reservoirs
+%land, ocean, atmosphere
+%not necesarry to include in report
+
+global rVa mgt aLL
+%Atmosphere (GtC)
+Catm = 2*squeeze(sAT(4,1,:))/rVa/mgt; %convert ppm to GtC and takes both hemispheres
+
+%Land (GtC)
+LandC = 2*squeeze(sum(sLB,1)); %acc to LandExc_R LB refers to one hemisphere, so x2
+
+%Ocean (GtC)
+OceanC = GetOceanCarbonInventory(filename);
+
+
+
+%Convert to anomaly
+Catm     = Catm - Catm(1);
+LandC     = LandC - LandC(1);
+OceanC    = OceanC - OceanC(1);
+
+
+%orient as col vectors so dimensions align
+Catm      = Catm(:);
+LandC     = LandC(:);
+OceanC    = OceanC(:);
+
+
+time = time(:);
+
+TotalC = Catm + LandC + OceanC;
+
+% Plot cumulated carbon for q*1
+figure
+hold on
+box on
+
+plot(time,TotalC,'k','LineWidth',2.5)
+plot(time,OceanC,'b','LineWidth',2)
+plot(time,Catm,'r','LineWidth',2)
+plot(time,LandC,'g','LineWidth',2)
+
+yline(0,'k:')
+
+xlabel('Year')
+ylabel('\Delta Carbon (GtC)')
+
+legend('Total','Ocean', 'Atmosphere', 'Land', 'Location','best')
+title('Carbon budget changes relative to 1765 AD for q*1')
+
+grid on
+fprintf('Final imbalance = %.4f GtC\n',TotalC(end))
+
+%_____________________end of carbon budget visual code________________________
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%onwards to the rest of the scaled files: 
+
+%% load files
+Scaled = cell(length(qmult),1); %preallocation
+
+for i = 1:length(qmult)
+
+    file = sprintf('OutThilda_Zero_3C_incr_circ_10000yr_q%.2f.mat',qmult(i));
+    Scaled{i} = load(file);
+
+end
+
+
+%% Sediment: changes in net burial of carbonate through time
+%net burial is burial-dissolution
+%see if it matches the low atm co2 for 1765-2100 for high circ and how
+%there is a high atm co2 for this period for the scaled down circ
+
+figure
+hold on
+box on
+for i = 1:length(qmult)
+    filename = sprintf( ...
+        'OutThilda_Zero_3C_incr_circ_10000yr_q%.2f.mat', qmult(i));
+    [~,CcarbBurial,~] = GetSedimentCarbonBurial(filename);
+
+    %sign convention: burial is negative (leaves ocean, enters sediment)
+
+    %Make burial positive, so now bur>0 means leaves ocean enters sediment
+    CcarbBurial = -CcarbBurial;
+    plot(time, CcarbBurial, 'LineWidth',2, 'Color',col(i,:))
+end
+
+xlabel('Year')
+ylabel('Carbonate burial (GtC yr^{-1})')
+legend(compose('q/q_0 = %.2f',qmult), 'Location','northeast')
+grid on
+title('Carbonate burial to sediment under zero forcing, scaled circulation')
+
+%% overlay: atm CO2 and carbonate net burial
+%just for the extremes: testing if carbonate could explain co2atm
+%developments
+figure
+tiledlayout(1,2)
+
+qplot = [0.25 1.50];
+
+for k = 1:length(qplot)
+    filename = sprintf(...
+        'OutThilda_Zero_3C_incr_circ_10000yr_q%.2f.mat',...
+        qplot(k));
+
+    load(filename,'st','sAT')
+    year = st + 1765;
+
+    % Atmospheric CO2(ppm)
+    pCO2 = squeeze(sAT(4,1,:))*1e6;
+
+    %carbonate burial
+    [~,CcarbBurial,~] = GetSedimentCarbonBurial(filename);
+
+    %make burial positive
+    CcarbBurial = -CcarbBurial;
+    
+    nexttile
+    yyaxis left
+    plot(year,pCO2,'b','LineWidth',2)
+    ylabel('Atmospheric CO_2 (ppm)')
+
+    yyaxis right
+    plot(year,CcarbBurial,'r','LineWidth',2)
+    ylabel('Carbonate burial (GtC yr^{-1})') %positive means removed from ocean and brought to sediment
+    xlabel('Year')
+    title(sprintf('q/q_0 = %.2f',qplot(k)))
+    grid on
+end
+sgtitle('Atmospheric CO_2 and carbonate burial(zero forcing)')
+
+
+%% ocean carbon over time 
+%overlay scaled and dynamimc
+%we already have the scaled files loaded
+
+figure
+hold on
+box on
+
+%loop through the scaled and get inventory
+for i = 1:length(qmult)
+
+    filename = sprintf( ...
+        'OutThilda_Zero_3C_incr_circ_10000yr_q%.2f.mat', qmult(i));
+
+    OceanC = GetOceanCarbonInventory(filename);
+    OceanC = OceanC - OceanC(1);
+    plot(time,OceanC,'Color',col(i,:),'LineWidth',1.5)
+end
+
+%Dynamic
+dynfile = 'OutThilda_ZeroForce_dynamicCirc_10000yr.mat';
+
+OceanDyn = GetOceanCarbonInventory(dynfile);
+OceanDyn = OceanDyn - OceanDyn(1);
+
+plot(time,OceanDyn,'k--','LineWidth',3)
+xlabel('Year')
+ylabel('\Delta Ocean Carbon (GtC)')
+
+title('Zero forcing: Ocean carbon inventory change relative to 1765')
+
+grid on
+
+
+
+
+%% Evolution of carbon stored according to depth through time?
+%realistically this is most relevant for decreases of moderate scale,thus
+%q*0.5,q*0.75
+files = {'OutThilda_Zero_3C_incr_circ_10000yr_q0.50.mat'
+    'OutThilda_Zero_3C_incr_circ_10000yr_q0.75.mat'
+    'OutThilda_ZeroForce_dynamicCirc_10000yr.mat'};
+
+titles = {'Scaled q = 0.50'
+    'Scaled q = 0.75'
+    'Dynamic circulation'};
+global dm d n %layer dimensions
+
+%show all of this in one fig (2x3)
+figure
+t = tiledlayout(3,2,'TileSpacing','compact','Padding','compact');
+for i = 1:3
+    [CarbonLL,CarbonHL] = GetOceanCarbonByLayer(files{i});
+    load(files{i},'st')
+
+    year = st + 1765;
+    depth = [dm dm+d*(1:n-1)];
+
+    %LOW LATITUDE LL
+    nexttile
+    imagesc(year,depth,CarbonLL)
+    set(gca,'YDir','reverse')
+    xlabel('Year')
+    ylabel('Depth (m)')
+    title([titles{i} ' - LL'])
+
+    clim([-5 5])
+
+
+    % HIGH LATITUDE HL
+    nexttile
+    imagesc(year,depth,CarbonHL)
+    set(gca,'YDir','reverse')
+    xlabel('Year')
+    ylabel('Depth (m)')
+    title([titles{i} ' - HL'])
+
+    clim([-5 5])
+
+end
+cb = colorbar;
+cb.Layout.Tile = 'east';
+cb.Label.String = '\Delta Carbon inventory (GtC)';
+sgtitle('Zero forcing: Change in ocean carbon inventory relative to 1765')
+
+
+
+
+
+%% Dynamic circ: plots of q through time
+
+%non normalised: 
+dynfile = 'OutThilda_ZeroForce_dynamicCirc_10000yr.mat';
+S = load(dynfile,'st','sqmax');
+time = S.st + 1765;
+
+figure
+plot(time,S.sqmax,'k','LineWidth',2)
+xlabel('Year')
+ylabel('Circulation strength, q (m^3 s^{-1})')
+title('Zero forcing: Dynamically evolving circulation')
+grid on
+
+%normalised with respect to q_ref:
+q0 = aLL*1.8e-8; %aLL from ParVal
+
+figure
+plot(time,S.sqmax/q0,'k','LineWidth',2)
+yline(1,'k:');
+xlabel('Year')
+ylabel('q/q_0')
+title('Zero forcing: Normalised dynamically evolving circulation')
+grid on
+
+
+
+%% Additional plots and table outputs: 
+%%% Zero forcing and scaled circulations
+%created july 2026
+%examines how circulation sans anthropogenic forcing influences carbon
+%variables
+
+
+%% load 
+Zero_025 = load('OutThilda_Zero_3C_incr_circ_10000yr_q0.25.mat');
+Zero_050 = load('OutThilda_Zero_3C_incr_circ_10000yr_q0.50.mat');
+Zero_075 = load('OutThilda_Zero_3C_incr_circ_10000yr_q0.75.mat');
+Zero_100 = load('OutThilda_Zero_3C_incr_circ_10000yr_q1.00.mat');
+Zero_125 = load('OutThilda_Zero_3C_incr_circ_10000yr_q1.25.mat');
+Zero_150 = load('OutThilda_Zero_3C_incr_circ_10000yr_q1.50.mat');
+time = Zero_025.st+1765;
+
+%plot ocean carbon
+Zero_025_Ocean_Carbon  = GetOceanCarbonUptake('OutThilda_Zero_3C_incr_circ_10000yr_q0.25.mat');
+Zero_050_Ocean_Carbon  = GetOceanCarbonUptake('OutThilda_Zero_3C_incr_circ_10000yr_q0.50.mat');
+Zero_075_Ocean_Carbon  = GetOceanCarbonUptake('OutThilda_Zero_3C_incr_circ_10000yr_q0.75.mat');
+Zero_100_Ocean_Carbon  = GetOceanCarbonUptake('OutThilda_Zero_3C_incr_circ_10000yr_q1.00.mat');
+Zero_125_Ocean_Carbon  = GetOceanCarbonUptake('OutThilda_Zero_3C_incr_circ_10000yr_q1.25.mat');
+Zero_150_Ocean_Carbon  = GetOceanCarbonUptake('OutThilda_Zero_3C_incr_circ_10000yr_q1.50.mat');
+
+
+figure 
+plot(time,Zero_025_Ocean_Carbon,'LineWidth',2)
+hold on
+plot(time,Zero_050_Ocean_Carbon,'LineWidth',2)
+plot(time,Zero_075_Ocean_Carbon,'LineWidth',2)
+plot(time,Zero_100_Ocean_Carbon,'LineWidth',2)
+plot(time,Zero_125_Ocean_Carbon,'LineWidth',2)
+plot(time,Zero_150_Ocean_Carbon,'LineWidth',2)
+
+xlabel('Year')
+ylabel('Oceanic carbon uptake (GtC)')
+xlim([time(1) time(end)])
+legend('q*0.25','q*0.50', 'q*0.75','q*1.00', 'q*1.25','q*1.50','Location','best')
+title('Zero forcing: Oceanic carbon uptake relative to 1765')
+grid on
+
+%shown  ocean carbon for shorter timescale: 
+figure 
+plot(time,Zero_025_Ocean_Carbon,'LineWidth',2)
+hold on
+plot(time,Zero_050_Ocean_Carbon,'LineWidth',2)
+plot(time,Zero_075_Ocean_Carbon,'LineWidth',2)
+plot(time,Zero_100_Ocean_Carbon,'LineWidth',2)
+plot(time,Zero_125_Ocean_Carbon,'LineWidth',2)
+plot(time,Zero_150_Ocean_Carbon,'LineWidth',2)
+
+xlabel('Year')
+ylabel('Oceanic carbon uptake (GtC)')
+xlim([time(1) time(140)])
+legend('q*0.25','q*0.50', 'q*0.75','q*1.00', 'q*1.25','q*1.50','Location','best')
+title('Zero forcing: Oceanic carbon uptake relative to 1765')
+grid on
+
+% oceanic carbon uptake relative to reference circulation q0
+figure 
+plot(time,Zero_025_Ocean_Carbon-Zero_100_Ocean_Carbon,'LineWidth',2)
+hold on
+plot(time,Zero_050_Ocean_Carbon-Zero_100_Ocean_Carbon,'LineWidth',2)
+plot(time,Zero_075_Ocean_Carbon-Zero_100_Ocean_Carbon,'LineWidth',2)
+plot(time,Zero_100_Ocean_Carbon-Zero_100_Ocean_Carbon,'LineWidth',2)
+plot(time,Zero_125_Ocean_Carbon-Zero_100_Ocean_Carbon,'LineWidth',2)
+plot(time,Zero_150_Ocean_Carbon-Zero_100_Ocean_Carbon,'LineWidth',2)
+
+xlabel('Year')
+ylabel('Oceanic carbon uptake anomaly (GtC)')
+xlim([time(1) time(end)])
+legend('q*0.25','q*0.50', 'q*0.75','q*1.00', 'q*1.25','q*1.50','Location','best')
+title('Zero forcing: Oceanic carbon uptake anomaly relative to 1765')
+grid on
+
+
+
+%plot atmospheric co2
+figure 
+plot(time,squeeze(Zero_025.sAT(4,1,:))*1e6,'LineWidth',2)
+hold on
+plot(time,squeeze(Zero_050.sAT(4,1,:))*1e6,'LineWidth',2)
+plot(time,squeeze(Zero_075.sAT(4,1,:))*1e6,'LineWidth',2)
+plot(time,squeeze(Zero_100.sAT(4,1,:))*1e6,'LineWidth',2)
+plot(time,squeeze(Zero_125.sAT(4,1,:))*1e6,'LineWidth',2)
+plot(time,squeeze(Zero_150.sAT(4,1,:))*1e6,'LineWidth',2)
+
+xlabel('Year')
+ylabel('Atmospheric CO2 (ppm)')
+xlim([time(1) time(end)])
+legend('q*0.25','q*0.50', 'q*0.75','q*1.00', 'q*1.25','q*1.50','Location','best')
+title('Atmospheric CO2 for zero forcing, scaled circulation')
+grid on
+
+
+%atm CO2 for shorter time
+figure 
+plot(time,squeeze(Zero_025.sAT(4,1,:))*1e6,'LineWidth',2)
+hold on
+plot(time,squeeze(Zero_050.sAT(4,1,:))*1e6,'LineWidth',2)
+plot(time,squeeze(Zero_075.sAT(4,1,:))*1e6,'LineWidth',2)
+plot(time,squeeze(Zero_100.sAT(4,1,:))*1e6,'LineWidth',2)
+plot(time,squeeze(Zero_125.sAT(4,1,:))*1e6,'LineWidth',2)
+plot(time,squeeze(Zero_150.sAT(4,1,:))*1e6,'LineWidth',2)
+
+xlabel('Year')
+ylabel('Atmospheric CO2 (ppm)')
+xlim([time(1) time(80)])
+legend('q*0.25','q*0.50', 'q*0.75','q*1.00', 'q*1.25','q*1.50','Location','best')
+title('Atmospheric CO2 for zero forcing, scaled circulation')
+grid on
+
+%one notices a rapid decrease in atmco2 for weakened q and reverse is the
+%case for increased circ
+%explore this by seeing if it could be related to changes in how DIC rich
+%deep water is brought to the surface: 
+
+
+%check for most weakened
+filename = 'OutThilda_Zero_3C_incr_circ_10000yr_q0.25.mat';
+
+load(filename)
+time = st + 1765;
+
+%Surface DIC
+DIC_LL = squeeze(sLL(4,1,:));
+DIC_HL = squeeze(sHL(4,1,:));
+DIC_LL = DIC_LL - DIC_LL(1);
+DIC_HL = DIC_HL - DIC_HL(1);
+
+figure
+hold on
+box on
+
+plot(time,DIC_LL,'b','LineWidth',2)
+plot(time,DIC_HL,'r','LineWidth',2)
+xlabel('Year')
+ylabel('Surface DIC (mol m^{-3})')
+legend('Low latitude','High latitude','Location','best')
+title('Surface DIC anomaly evolution')
+grid on
+
+%dual axes with atm co2 as well to better compare: 
+Catm = 2*squeeze(sAT(4,1,:))/rVa/mgt;
+
+yyaxis left
+plot(time,DIC_LL,'b','LineWidth',2)
+hold on
+plot(time,DIC_HL,'r','LineWidth',2)
+ylabel('\Delta Surface DIC (mol m^{-3})')
+
+yyaxis right
+plot(time,Catm - Catm(1),'k','LineWidth',2)
+ylabel('\Delta Atmospheric CO_2 (ppm)')
+
+xlabel('Year')
+title('Surface DIC anomaly and atmospheric CO_2 response')
+legend('LL DIC','HL DIC','Atmospheric CO_2')
+grid on
+%anomaly with respect to PI 
+
+%%%  also check if land biosphere takes up a significant amount: 
+
+%Atmosphere
+Catm = 2*squeeze(sAT(4,1,:))/rVa/mgt;
+Catm = Catm - Catm(1);
+
+%Ocean
+OceanC = GetOceanCarbonInventory(filename);
+OceanC = OceanC - OceanC(1);
+
+%Land
+LandC = 2*squeeze(sum(sLB,1));
+LandC = LandC - LandC(1);
+figure
+plot(time,Catm,'r','LineWidth',2)
+hold on
+plot(time,OceanC,'b','LineWidth',2)
+plot(time,LandC,'g','LineWidth',2)
+legend('Atmosphere','Ocean','Land')
+xlabel('Year')
+ylabel('\Delta Carbon (GtC)')
+grid on
+%check if land (green) has a significant uptake for the first centuries
+
+%%
+%is the budget closed?
+[CorgBurial,CcarbBurial,TotalBurial] = ...
+    GetSedimentCarbonBurial( ...
+    'OutThilda_Zero_3C_incr_circ_10000yr_q0.25.mat');
+
+DeltaBurial = TotalBurial - TotalBurial(1);
+SedimentC = cumtrapz(st,-DeltaBurial); %
+Total = Catm(:) + OceanC(:) + LandC(:);
+
+
+figure
+plot(time,Total,'k','LineWidth',2)
+hold on 
+plot(time, Total + SedimentC(:), '--r')
+xlabel('Year')
+ylabel('\Delta Carbon (GtC)')
+legend('Atmosphere + Ocean + Land', ...
+       'Atmosphere + Ocean + Land - Sediments') 
+title('Atmosphere + Ocean + Land for q*0.25, zero forcing')
+grid on
+%if sediment is positive it means something is removed from the ocean
+
+
+figure
+plot(time,Catm,'r','LineWidth',2)
+hold on
+plot(time,OceanC,'b','LineWidth',2)
+plot(time,LandC,'g','LineWidth',2)
+plot(time, -SedimentC(:),'Color',[0.55 0.27 0.07],'LineWidth',2)
+plot(time,(Catm(:)+OceanC(:)+LandC(:)-SedimentC(:)),'k','LineWidth',2)
+legend('Atmosphere','Ocean','Land','Sediment','Total','Location','northwest')
+xlabel('Year')
+ylabel('\Delta Carbon (GtC)')
+title('zero force, q*0.25: Changes in carbon reservoirs (anomalies)')
+grid on
+%otherwise: could be explained by sediments
+
+%%%%%%%%%%%%%%%%%%%%%%
+
+%%
+
+%plot ocean carbon / depth / time
+%%
+%plot sediment? 
+
+
+[CorgBurial,CcarbBurial,TotalBurial] = ...
+    GetSedimentCarbonBurial( ...
+    'OutThilda_Zero_3C_incr_circ_10000yr_q1.00.mat');
+
+[min(CorgBurial) max(CorgBurial)]
+[min(CcarbBurial) max(CcarbBurial)]
+
+
+load('OutThilda_Zero_3C_incr_circ_10000yr_q1.00.mat','st')
+
+CumCorg = cumtrapz(st,CorgBurial);
+CumCarb = cumtrapz(st,CcarbBurial);
+
+CumTotal = cumtrapz(st,TotalBurial);
+disp(CumTotal)
+
+%plot
+figure
+plot(st+1765,CorgBurial,'LineWidth',1.5)
+hold on
+plot(st+1765,CcarbBurial,'LineWidth',1.5)
+plot(st+1765,TotalBurial,'LineWidth',1.5)
+
+xlabel('Year')
+ylabel('Carbon burial (GtC yr^{-1})')
+legend('Organic C','CaCO_3-C','Total C')
+grid on
+
+
+%% PLOT: inspecting where carbon is stored: 
+%carbon redistribution relative to q0
+% Preallocate
+qmult = [0.25 0.50 0.75 1.00 1.25 1.50];
+nq = length(qmult);
+nt = length(st);
+year = st + 1765;
+OceanC_all    = zeros(nq,nt);
+CumBurial_all = zeros(nq,nt);
+TempLL_all    = zeros(nq,nt);
+TempHL_all    = zeros(nq,nt);
+
+for iq = 1:nq
+
+    filename = sprintf( ...
+        'OutThilda_Zero_3C_incr_circ_10000yr_q%.2f.mat',qmult(iq));
+
+    %Ocean carbon
+    OceanC_all(iq,:) = GetOceanCarbonUptake(filename);
+
+    %Sediment carbon burial
+    [CorgBurial,CcarbBurial,TotalBurial] = ...
+        GetSedimentCarbonBurial(filename);
+
+    TotalBurial = -TotalBurial;
+    CumBurial_all(iq,:) = cumtrapz(st,TotalBurial);
+
+    %Surface ocean temperature
+    S = load(filename,'sLL','sHL');
+
+    TempLL_all(iq,:) = squeeze(S.sLL(1,1,:));
+    TempHL_all(iq,:) = squeeze(S.sHL(1,1,:));
+
+end
+
+iref = find(qmult == 1); %ref is when unscaled
+
+DeltaOcean  = OceanC_all - OceanC_all(iref,:);
+DeltaBurial = CumBurial_all - CumBurial_all(iref,:);
+DeltaTempLL = TempLL_all - TempLL_all(iref,:);
+DeltaTempHL = TempHL_all - TempHL_all(iref,:);
+
+%plotting 
+figure
+tiledlayout(2,3)
+
+for iq = 1:nq
+
+    nexttile
+
+    %LEFT AXIS: carbon
+    yyaxis left
+    hold on
+
+    h1 = plot(year,DeltaOcean(iq,:), ...
+        'LineWidth',1.5);
+
+    h2 = plot(year,-DeltaBurial(iq,:), ...
+        '--','LineWidth',1.5);
+
+    yline(0,'k:')
+
+    ylabel('\Delta C (GtC)')
+
+    %RIGHT AXIS: SST anomaly ( temperature)
+    yyaxis right
+    hold on
+
+    h3 = plot(year,DeltaTempLL(iq,:), ...
+        ':','LineWidth',1.5);
+
+    h4 = plot(year,DeltaTempHL(iq,:), ...
+        '-.','LineWidth',1.5);
+
+    ylabel('\Delta T (^{\circ}C)')
+
+    %labels
+    xlabel('Year')
+
+    title(sprintf('$q/q_0 = %.2f$',qmult(iq)), ...
+        'Interpreter','latex')
+
+    grid on
+
+       %place the legend
+    if iq == 4
+        legend([h1 h2 h3 h4], ...
+            '\Delta C_{ocean}', ...
+            '-\Delta C_{burial}', ...
+            '\Delta T_{LL}', ...
+            '\Delta T_{HL}', ...
+            'Location','southwest')
+    end
+
+end
+
+sgtitle('Zero forcing: Ocean carbon, sediment burial and SST anomalies relative to q_0')
+
+%%  Outputting data for report tables: 
+%%DATA FOR TABLE 1
+
+qmult = [0.25 0.50 0.75 1.00 1.25 1.50];
+nq = length(qmult);
+
+% Desired times after initialization
+target_t = [335 1000 5000 10000];
+
+% Preallocate
+OCU_table = zeros(nq,length(target_t));
+DeltaOCU_10k = zeros(nq,1);
+CumBurial_10k = zeros(nq,1);
+
+for iq = 1:nq
+
+    filename = sprintf( ...
+        'OutThilda_Zero_3C_incr_circ_10000yr_q%.2f.mat',qmult(iq));
+    S = load(filename,'st');
+
+    % Ocean carbon uptake relative to 1765
+    OCU = GetOceanCarbonUptake(filename);
+
+    %Find nearest saved timestep to requested times
+    for it = 1:length(target_t)
+        [~,idx] = min(abs(S.st-target_t(it)));
+        OCU_table(iq,it) = OCU(idx);
+    end
+
+    % burial
+    [~,~,TotalBurial] = GetSedimentCarbonBurial(filename); %tildes bc we ignore
+    %corg and carb and only keep total
+
+    %Make positive = burial (negative = removed from rest?)
+    TotalBurial = -TotalBurial;
+
+    %Cumulative burial in GtC
+    CumBurial = cumtrapz(S.st,TotalBurial);
+    CumBurial_10k(iq) = CumBurial(end);
+end
+
+% q0 reference
+iref = find(qmult == 1);
+
+DeltaOCU_10k = OCU_table(:,end) - OCU_table(iref,end);
+
+DeltaBurial_10k = ...
+    CumBurial_10k - CumBurial_10k(iref);
+%Display
+Table1 = table(qmult', ...
+    OCU_table(:,1), ...
+    OCU_table(:,2), ...
+    OCU_table(:,3), ...
+    OCU_table(:,4), ...
+    DeltaOCU_10k, ...
+    DeltaBurial_10k, ...
+    'VariableNames', ...
+    {'q_q0','OCU_335yr','OCU_1kyr','OCU_5kyr','OCU_10kyr', ...
+     'DeltaOCU_10k','DeltaBurial_10k'});
+disp(Table1)
+
+%% plot for linearity indication: 
+q = [0.25 0.50 0.75 1.00 1.25 1.50];
+
+OCU_335 = OCU_table(:,1);
+OCU_1k  = OCU_table(:,2);
+OCU_5k  = OCU_table(:,3);
+OCU_10k = OCU_table(:,4);
+
+% Put data together
+OCU = [OCU_335(:);
+       OCU_1k(:);
+       OCU_5k(:);
+       OCU_10k(:)];
+OCU = OCU_table.';
+labels = {'335 yr','1 kyr','5 kyr','10 kyr'};
+
+figure
+hold on
+
+slopes = zeros(1,4);
+R2vals = zeros(1,4);
+
+for i = 1:4
+    %Linear fit
+    p = polyfit(q,OCU(i,:),1);
+    yfit = polyval(p,q);
+
+    slope = p(1);
+    slopes(i) = slope;
+
+    %R^2
+    SSres = sum((OCU(i,:) - yfit).^2);
+    SStot = sum((OCU(i,:) - mean(OCU(i,:))).^2);
+
+    R2 = 1 - SSres/SStot;
+    R2vals(i) = R2;
+
+    %print slopes
+    fprintf('%6s: slope = %8.2f GtC/(q/q0),   R^2 = %.3f\n', ...
+        labels{i}, slope, R2)
+
+    % Plot data
+    c = plot(q,OCU(i,:), 'o','MarkerSize',7,...
+        'LineWidth',1.5,'DisplayName',sprintf('%s, R^2 = %.3f', ...
+                              labels{i}, R2));
+
+    %Plot fit
+    plot(q,yfit,'--','LineWidth',1.5,'Color',c.Color,'HandleVisibility','off');
+end
+
+xlabel('Scaled overturning strength, q/q_0')
+ylabel('\Delta Ocean carbon uptake (GtC)')
+legend('Location','best')
+grid on
+box on
+
+%% data for table 2
+%% Data for carbon distribution table
+
+qmult = [0.25 0.50 0.75 1.00 1.25 1.50];
+nq = length(qmult);
+
+ParVal_R
+global dm d n
+
+%Model layer depths
+depth = [dm dm+d*(1:n-1)];
+
+% Define depth ranges
+idx_surface = depth <= 200;
+idx_intermediate = depth > 200 & depth <= 2000;
+idx_deep = depth > 2000;
+
+%Preallocate
+C_LL = zeros(nq,n);
+C_HL = zeros(nq,n);
+pCO2 = zeros(nq,1);
+
+
+%%Load each simulation
+for iq = 1:nq
+
+    filename = sprintf( ...
+        'OutThilda_Zero_3C_incr_circ_10000yr_q%.2f.mat',qmult(iq));
+    %Carbon change by layer relative to 1765
+    [CarbonLL,CarbonHL] = GetOceanCarbonByLayer(filename);
+
+    %Take final timestep (10 kyr)
+    C_LL(iq,:) = CarbonLL(:,end)';
+    C_HL(iq,:) = CarbonHL(:,end)';
+
+    %Atmospheric CO2 at 10 kyr
+    S = load(filename,'sAT');
+    pCO2(iq) = S.sAT(4,1,end)*1e6;  % atm -> ppm
+end
+
+
+%Convert to anomalies relative to q0
+iref = find(qmult == 1);
+DeltaLL = C_LL - C_LL(iref,:);
+DeltaHL = C_HL - C_HL(iref,:);
+
+Delta_pCO2 = pCO2 - pCO2(iref);
+
+
+% Vertical distribution
+% GtC anomaly in each depth interval
+C_surface = sum(DeltaLL(:,idx_surface),2) + sum(DeltaHL(:,idx_surface),2);
+
+C_intermediate =  sum(DeltaLL(:,idx_intermediate),2) + ...
+    sum(DeltaHL(:,idx_intermediate),2);
+
+C_deep =  sum(DeltaLL(:,idx_deep),2) +  sum(DeltaHL(:,idx_deep),2);
+
+% Total ocean carbon anomaly
+C_total = C_surface + C_intermediate + C_deep;
+
+% Convert to percentages
+f_surface = 100*C_surface./C_total;
+f_intermediate = 100*C_intermediate./C_total;
+f_deep = 100*C_deep./C_total;
+
+
+%Latitudinal distribution
+C_LL_total = sum(DeltaLL,2);
+C_HL_total = sum(DeltaHL,2);
+
+f_LL = 100*C_LL_total./C_total;
+f_HL = 100*C_HL_total./C_total;
+
+
+% q/q0 = 1 has no anomaly relative to itself
+
+f_surface(iref) = NaN;
+f_intermediate(iref) = NaN;
+f_deep(iref) = NaN;
+f_LL(iref) = NaN;
+f_HL(iref) = NaN;
+
+
+%% Create table
+T = table( ...
+    qmult', ...
+    f_surface, ...
+    f_intermediate, ...
+    f_deep, ...
+    f_LL, ...
+    f_HL, ...
+    Delta_pCO2, ...
+    'VariableNames', ...
+    {'q_q0','Surface_pct','Intermediate_pct','Deep_pct', ...
+     'LL_pct','HL_pct','Delta_pCO2_ppm'});
+
+disp(T)
+
+

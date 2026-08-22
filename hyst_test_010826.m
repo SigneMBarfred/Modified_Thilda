@@ -21,6 +21,7 @@ plot(OceanCarbon(finish:end), sqmax(finish:end), 'g', 'LineWidth',2)
 xlabel('Change in ocean carbon inventory (GtC)')
 ylabel('Overturning circulation strength')
 legend('Increasing forcing','Decreasing forcing','Post 3250AD')
+title('Hysteresis test for VL scenario')
 grid on
 
 %% what happens as we go towards simulations end? 
@@ -29,5 +30,5 @@ plot(OceanCarbon(finish:end), sqmax(finish:end),'LineWidth',2)
 
 xlabel('Change in ocean carbon inventory (GtC)')
 ylabel('Overturning circulation strength')
-legend('SSP1 (L)')
+legend('VL')
 grid on

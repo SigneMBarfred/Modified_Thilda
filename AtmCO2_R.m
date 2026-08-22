@@ -34,7 +34,7 @@
 % 
 % return
 % % 
-% % above is original AtmCO2
+% % above is original AtmCO2 for SRES scenarios
 
 %below is the edited dyn circ ssp july 2026 :
 function [mpr] = AtmCO2_R(t,MH)

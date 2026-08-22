@@ -61,10 +61,10 @@ global ULL UHL LfLL LfHL Lxf Lyf rc fdiv sy mgt weLL weHL rVa rno rcp rcop
 
 % Ocean and atmospheric exchanges (see functions) 
 %-------------
-%[q wLL wHL kvLL kvHL kh drho]          = OceExc_R(LL,HL); %changed to
+[q wLL wHL kvLL kvHL kh drho]          = OceExc_R(LL,HL); %changed to
 %accept HL+LL in aug 2026 (for dyn. evol. circ.
 %[q wLL wHL kvLL kvHL kh]          = OceExc_R(HL); %changed to accept HL in july 2026
-[q wLL wHL kvLL kvHL kh]          = OceExc_R; %original
+%[q wLL wHL kvLL kvHL kh]          = OceExc_R; %original
 
 %-------------
 [mpra] = AtmAero_R(t,MHA);

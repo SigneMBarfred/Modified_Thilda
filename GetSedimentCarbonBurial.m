@@ -7,6 +7,8 @@ function [CorgBurial,CcarbBurial,TotalBurial] = ...
 % CorgBurial: organic carbon burial (GtC/yr)
 % CcarbBurial: CaCO3-carbon burial (GtC/yr)
 % TotalBurial: total carbon burial (GtC/yr)
+%negative values mean BURIAL (removal from ocean) 
+%positive signify release from sediment and into ocean
 
 %get relevant data and values: 
 load(filename)
@@ -22,7 +24,7 @@ depth = [dm dm+d*(1:n-1)]; %remember: dm is surface layer thickness
 %for LL (warm ocean)
 GAw = interp1(Globalarea(1:23,1), ...
               Globalarea(1:23,14),depth);
-%for HL
+%for HL 
 GAc = interp1(Globalarea(24:46,1), ...
               Globalarea(24:46,14),depth);
 
@@ -49,11 +51,11 @@ SedAreaHL = SedAreaHL * 1e4;
 
 
 %%troubleshooting: should be =1 if everything works
-fprintf('LL: sediment area/ocean area = %.6f\n', ...
-    sum(SedAreaLL)/(2*aLL*1e4));
+%fprintf('LL: sediment area/ocean area = %.6f\n', ...
+    %sum(SedAreaLL)/(2*aLL*1e4));
 
-fprintf('HL: sediment area/ocean area = %.6f\n', ...
-    sum(SedAreaHL)/(2*aHL*1e4));
+%fprintf('HL: sediment area/ocean area = %.6f\n', ...
+    %sum(SedAreaHL)/(2*aHL*1e4));
 
 %constants (taken from OrgFlx_R re: new production)
 bpe  = 1/sy;
@@ -139,7 +141,7 @@ for it = 1:nt
     end
 
 
-   %what fraction gets buried
+   %what fraction gets buried 
 
 OrgBur_LL = FC_LL .* (1 - pOrgCLL(:,it)');
 OrgBur_HL = FC_HL .* (1 - pOrgCHL(:,it)');

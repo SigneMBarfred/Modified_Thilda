@@ -1,0 +1,451 @@
+%%  Plotting script for thesis section SSPs HYSTERESIS TEST
+%last edited: 5th of aug 2026
+%forcing: SSPs, mirrored and extended (filename _Hyst)
+%circulation: dynamic (v2) +( scaled (which will prob end in appendix)
+
+clear all
+close all
+
+
+%sanity check hyst runs
+filename = 'OutThilda_SSP3_3C_Hyst_dynamicCirc_ver2_10000yr.mat';
+disp(1)
+load(filename,'sqmax','st')
+year = st + 1750
+OceanCarbon = GetOceanCarbonUptake(filename);
+forcingYears = 1501;
+endYear = 0 + forcingYears;   
+
+mid = find(st >= 750,1);
+finish = find(st >= endYear,1);
+
+%to hyst or not to hyst
+figure
+hold on
+
+plot(OceanCarbon(1:mid), sqmax(1:mid), 'b', 'LineWidth',2)
+plot(OceanCarbon(mid:finish), sqmax(mid:finish), 'r', 'LineWidth',2)
+plot(OceanCarbon(finish:end), sqmax(finish:end), 'g', 'LineWidth',2)
+
+xlabel('Change in ocean carbon inventory (GtC)')
+ylabel('Overturning circulation strength')
+legend('Increasing forcing','Decreasing forcing','Post 3250AD')
+title('Reversibility test for H scenario')
+grid on
+
+%% what happens as we go towards simulations end? 
+figure
+plot(OceanCarbon(finish:end), sqmax(finish:end),'LineWidth',2)
+
+xlabel('Change in ocean carbon inventory (GtC)')
+ylabel('Overturning circulation strength')
+legend('H')
+grid on
+
+
+
+
+
+
+
+
+
+
+%% load files
+
+%time  = st + 1750
+
+%% Plot circulation q as a function of time
+%scaled hyst
+
+%dyn circ hyst
+
+
+%% Plot Ocean Carbon Uptake as a function of circulation
+%scaled hyst
+
+%dyn circ hyst
+
+
+
+
+
+
+
+
+%%%%%%%%%%%%colorbar 
+%% Hysteresis trajectory coloured by time
+
+figure
+hold on
+box on
+
+scatter(OceanCarbon,...
+        sqmax/1e6,...
+        15,...
+        year,...
+        'filled')
+
+xlabel('\Delta Ocean carbon inventory (GtC)')
+ylabel('Overturning circulation strength, q (Sv)')
+
+title('Reversibility test for H scenario')
+
+clim([year(1) year(end)])
+
+cb = colorbar;
+cb.Label.String = 'Year';
+
+grid on
+
+%consider overlaying OCU vs q for dyn circ _hyst OutThilda files and OCU vs q for
+%regular dyn circ ssp OutThilda Files 
+
+
+
+
+
+
+
+%%%%%%%%%%%
+%plotting co2fosem+co2landem+ch4*30 on x axis and q on y axis
+
+%% Forcing/emissions as a function of overturning strength
+
+filename = 'OutThilda_SSP3_3C_Hyst_dynamicCirc_ver2_10000yr.mat';
+
+load(filename,'sqmax','st')
+
+load CO2fosem_SSP3_hyst.txt
+load CO2landem_SSP3_hyst.txt
+load CH4em_SSP3_hyst.txt
+
+% Total forcing/emissions
+TotalEmissions = CO2fosem_SSP3_hyst + CO2landem_SSP3_hyst + 30*CH4em_SSP3_hyst;
+
+
+forcingYear = 1750 + (0:length(CO2fosem_SSP3_hyst)-1);
+
+
+year = st + 1750;
+
+CO2fossil_model = interp1(forcingYear,...
+                         CO2fosem_SSP3_hyst,...
+                         year,...
+                         'linear',0);
+
+CO2land_model = interp1(forcingYear,...
+                        CO2landem_SSP3_hyst,...
+                        year,...
+                        'linear',0);
+
+CH4_model = interp1(forcingYear,...
+                    CH4em_SSP3_hyst,...
+                    year,...
+                    'linear',0);
+
+TotalEmissions = CO2fossil_model + ...
+                 CO2land_model + ...
+                 30*CH4_model;
+
+disp(TotalEmissions(end)) %is 28 
+
+% Calendar year
+year = st + 1750;
+
+
+
+figure
+hold on
+box on
+
+% Connect points with a line
+plot(TotalEmissions,...
+     sqmax/1e6,...
+     'k-',...
+     'LineWidth',1)
+
+scatter(TotalEmissions,...
+        sqmax/1e6,...
+        15,...
+        year,...
+        'filled')
+
+xlabel('CO2fos + CO2land + 30CH4')
+ylabel('Overturning circulation strength, q (Sv)')
+title('Overturning strength as a function of total emissions (H)')
+
+cb = colorbar;
+cb.Label.String = 'Year';
+
+grid on
+
+
+
+
+%%%%%%% x axis relative to q*1 OCU
+%% Reversibility test using OCU relative to q*1
+
+% --- Dynamic hysteresis run ---
+dynFile = 'OutThilda_SSP3_3C_Hyst_dynamicCirc_ver2_10000yr.mat';
+
+load(dynFile,'sqmax','st')
+
+year = st + 1750;
+
+% Dynamic ocean carbon inventory anomaly relative to preindustrial
+OceanDyn = GetOceanCarbonUptake(dynFile);
+
+% --- Reference fixed-circulation run (q*1) ---
+refFile = 'OutThilda_SSP3_3C_Hyst_incr_circ_10000yr_q1.00.mat';
+
+OceanRef = GetOceanCarbonUptake(refFile);
+
+% --- Circulation-induced anomaly ---
+DeltaOCU = OceanDyn - OceanRef;
+
+% Define forcing phases
+forcingYears = 1501;      % length of mirrored forcing
+mid    = find(st >= 750,1);
+finish = find(st >= forcingYears,1);
+
+%% Plot hysteresis trajectory
+
+figure
+hold on
+box on
+
+plot(DeltaOCU(1:mid), ...
+     sqmax(1:mid)/1e6, ...
+     'b','LineWidth',2)
+
+plot(DeltaOCU(mid:finish), ...
+     sqmax(mid:finish)/1e6, ...
+     'r','LineWidth',2)
+
+plot(DeltaOCU(finish:end), ...
+     sqmax(finish:end)/1e6, ...
+     'g','LineWidth',2)
+
+xlabel('\Delta Ocean carbon inventory relative to q*1 (GtC)')
+ylabel('Overturning circulation strength, q (Sv)')
+
+legend('Increasing forcing', ...
+       'Decreasing forcing', ...
+       'Post-forcing', ...
+       'Location','best')
+
+title('Reversibility test for H scenario')
+grid on
+%% Hysteresis trajectory coloured by time
+
+figure
+hold on
+box on
+
+scatter(DeltaOCU, ...
+        sqmax/1e6, ...
+        18, ...
+        year, ...
+        'filled')
+
+xlabel('\Delta Ocean carbon inventory relative to q*1 (GtC)')
+ylabel('Overturning circulation strength, q (Sv)')
+
+title('Reversibility test for H scenario')
+
+cb = colorbar;
+cb.Label.String = 'Year';
+
+clim([year(1) year(end)])
+
+grid on
+
+
+fprintf('Initial: DeltaOCU = %.3f GtC, q = %.3f Sv\n', ...
+        DeltaOCU(1), sqmax(1)/1e6);
+
+fprintf('Final:   DeltaOCU = %.3f GtC, q = %.3f Sv\n', ...
+        DeltaOCU(end), sqmax(end)/1e6);
+
+
+
+
+%%%%
+%% Contributions to density changes
+%%%%%%%%%%% Density decomposition for hysteresis test %%%%%%%%%%%%
+
+filename = 'OutThilda_SSP3_3C_Hyst_dynamicCirc_ver2_10000yr.mat';
+
+load(filename,'sLL','sHL','st','sqmax','sdrho')
+
+%Same coefficients as OceExc_R
+
+alpha = 2e-4;
+beta  = 8e-4;
+
+year = st + 1750;
+
+%Surface properties
+
+TLL = squeeze(sLL(1,1,:));
+SLL = squeeze(sLL(2,1,:));
+
+THL = squeeze(sHL(1,1,:));
+SHL = squeeze(sHL(2,1,:));
+
+%Contrasts
+
+DeltaT = THL - TLL;
+DeltaS = SHL - SLL;
+
+%Reference state
+
+DeltaT0 = DeltaT(1);
+DeltaS0 = DeltaS(1);
+
+%Anomalies
+
+dDeltaT = DeltaT - DeltaT0;
+dDeltaS = DeltaS - DeltaS0;
+
+%Contributions
+
+drho_T = -alpha * dDeltaT;
+drho_S =  beta  * dDeltaS;
+
+drho_total = drho_T + drho_S;
+
+%Plot
+
+figure
+
+tiledlayout(2,1,...
+    'TileSpacing','compact',...
+    'Padding','compact')
+
+%---------- Density contributions ----------
+
+nexttile
+hold on
+box on
+
+% Shade forcing phases
+yl = [-5e-4 5e-4];
+
+
+% Increasing forcing (blue)
+patch([1750 2500 2500 1750],...
+      [yl(1) yl(1) yl(2) yl(2)],...
+      [0.75 0.88 1.00],...
+      'EdgeColor','none',...
+      'FaceAlpha',0.3)
+
+% Decreasing forcing (orange)
+patch([2500 3250 3250 2500],...
+      [yl(1) yl(1) yl(2) yl(2)],...
+      [1.00 0.85 0.70],...
+      'EdgeColor','none',...
+      'FaceAlpha',0.3)
+
+% No forcing (green)
+patch([3250 11750 11750 3250],...
+      [yl(1) yl(1) yl(2) yl(2)],...
+      [0.85 0.95 0.85],...
+      'EdgeColor','none',...
+      'FaceAlpha',0.3)
+
+plot(year,drho_T,...
+     'r','LineWidth',2)
+
+plot(year,drho_S,...
+     'b','LineWidth',2)
+
+plot(year,drho_total,...
+     'k','LineWidth',2)
+
+% Compare with stored model value
+%plot(year,sdrho - sdrho(1),...
+     'k--','LineWidth',1.2)
+
+xline(2500,'k:','Mirror start',...
+      'LabelVerticalAlignment','bottom')
+
+xline(3250,'k:','Forcing = 0',...
+      'LabelVerticalAlignment','bottom')
+
+ylabel('\Delta \rho')
+
+title('CMIP7 H hysteresis: density-contrast decomposition')
+
+legend('Increasing forcing',...
+       'Decreasing forcing',...
+       'No forcing',...
+       'Temperature contribution',...
+       'Salinity contribution',...
+       'Total density diff.',...
+       'Location','best')
+
+grid on
+xlim([1750 11750])
+
+
+% ---------- Circulation response ----------
+
+nexttile
+hold on
+box on
+
+% Shade the same phases
+yl2 = [min(sqmax/1e6)-0.02, max(sqmax/1e6)+0.02];
+
+patch([1750 2500 2500 1750],...
+      [yl2(1) yl2(1) yl2(2) yl2(2)],...
+      [0.75 0.88 1.00],...
+      'EdgeColor','none',...
+      'FaceAlpha',0.5)
+
+patch([2500 3250 3250 2500],...
+      [yl2(1) yl2(1) yl2(2) yl2(2)],...
+      [1.00 0.85 0.70],...
+      'EdgeColor','none',...
+      'FaceAlpha',0.5)
+
+patch([3250 11750 11750 3250],...
+      [yl2(1) yl2(1) yl2(2) yl2(2)],...
+      [0.85 0.95 0.85],...
+      'EdgeColor','none',...
+      'FaceAlpha',0.5)
+
+plot(year,sqmax/1e6,...
+     'k','LineWidth',2)
+
+xline(2500,'k:')
+xline(3250,'k:')
+
+xlabel('Year')
+ylabel('q (Sv)')
+
+title('Overturning circulation response')
+
+grid on
+xlim([1750 11750])
+
+
+
+
+%%
+%%%%
+%% TABLE: 
+%recovery - showing: variable - initial - final - recovery after 10000yrs (percent) 
+%one for dyn circ hyst
+%one for scaled circ hyst
+
+
+
+%% Consider: plotting cumulated carbon through time just to see how neg. forcing shows up
+%land, ocean, atmosphere, sediment
+%not necesarry to include in report but nice to have
+
+
+

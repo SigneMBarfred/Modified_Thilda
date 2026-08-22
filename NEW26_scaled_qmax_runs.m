@@ -18,7 +18,7 @@ for i = 1:length(qmult)
     Thilda_R
 
     movefile('OutThilda_R.mat', ...
-        sprintf('OutThilda_SSP1_3C_Hyst_incr_circ_10000yr_q%.2f.mat',qmult(i))) %Thilda_R saves as OutThilda_R always so we move to avoid overriding
+        sprintf('OutThilda_Zero_3C_incr_circ_10000yr_q%.2f.mat',qmult(i))) %Thilda_R saves as OutThilda_R always so we move to avoid overriding
 %notice: named for 10000 yr runs
 end
  

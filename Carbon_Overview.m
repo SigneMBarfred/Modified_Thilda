@@ -22,7 +22,7 @@ Catm = 2*squeeze(sAT(4,1,:))/rVa/mgt;
 
 %land carbon (there are 4 reservoirs in this, that we will simply add
 %together)
-LandC = squeeze(sum(sLB,1));
+LandC = 2*squeeze(sum(sLB,1));
 
 
 %adding it all up, we expect this then somewhat matches the development of
@@ -61,7 +61,7 @@ Ocean050 = Ocean050(:);
 
 Catm050 = 2*squeeze(sAT(4,1,:))/rVa/mgt;
 
-Land050 = squeeze(sum(sLB,1));
+Land050 = 2*squeeze(sum(sLB,1));
 
 Total050 = Ocean050 + Catm050 + Land050;
 
@@ -76,7 +76,7 @@ Ocean150 = Ocean150(:);
 
 Catm150 = 2*squeeze(sAT(4,1,:))/rVa/mgt;
 
-Land150 = squeeze(sum(sLB,1));
+Land150 = 2*squeeze(sum(sLB,1));
 
 
 
